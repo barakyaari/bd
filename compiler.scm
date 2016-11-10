@@ -39,19 +39,18 @@ done))
   	(*parser (char #\#))
        (*parser (char #\\))
        (*caten 2)
-       (*pack-with
-       	(lambda (a b)
-	  (list->string `(,a ,b))))
+
 done))
 
 (define <VisibleSimpleChar>
   (new 
-  	(*parser (char #\#))
-       (*parser (char #\\))
-       (*caten 2)
-       (*pack-with
-       	(lambda (a b)
-	  (list->string `(,a ,b))))
+  	 (*parser (range #\! #\~))
 done))
 
-(test-string <Boolean> "#F")
+(define <NamedChar>
+  (new 
+       (*parser (word "lambda"))
+       (*pack (lambda(a) (char->string a)))
+done))
+
+(test-string <NamedChar> "lambda")
