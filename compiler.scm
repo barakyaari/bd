@@ -14,7 +14,7 @@
        (*caten 2)
        (*pack-with
        	(lambda (a b)
-	  (list->string `(#\# #\t))))
+	  #t))
 	;; False:
   	(*parser (char #\#))
        (*parser (char #\f))
@@ -24,10 +24,34 @@
        (*caten 2)
        (*pack-with
        	(lambda (a b)
-	  (list->string `(#\# #\f))))
+	  #f))
        (*disj 2)
 
 done))
 
 
-(test-string <Boolean> "#f")
+;; --------------------------------
+;;           Char:
+;; --------------------------------
+
+(define <CharPrefix>
+  (new 
+  	(*parser (char #\#))
+       (*parser (char #\\))
+       (*caten 2)
+       (*pack-with
+       	(lambda (a b)
+	  (list->string `(,a ,b))))
+done))
+
+(define <VisibleSimpleChar>
+  (new 
+  	(*parser (char #\#))
+       (*parser (char #\\))
+       (*caten 2)
+       (*pack-with
+       	(lambda (a b)
+	  (list->string `(,a ,b))))
+done))
+
+(test-string <Boolean> "#F")
