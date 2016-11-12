@@ -25,6 +25,36 @@
    (*disj 3)
    done)))
 
+(define <XX>
+  (new (*parser <hex-digit>)
+       (*parser <hex-digit>)
+       (*caten 2)
+       (*pack-with
+  (lambda (h l)
+    (+ l (* h 16))))
+       done))
+
+(define <XXXX>
+  (new (*parser <XX>)
+       (*parser <XX>)
+       (*caten 2)
+       (*pack-with
+  (lambda (h l)
+    (+ l (* 256 h))))
+       done))
+
+(define <hex-char>
+  (new (*parser (word-ci "x"))
+
+       (*parser <XXXX>)
+       (*parser <XX>)
+       (*disj 2)
+       (*pack integer->char)
+
+       (*caten 2)
+       (*pack-with (lambda (x ch) ch))
+       done))
+
 ;; --------------------------------
 ;;           Boolean:
 ;; --------------------------------
@@ -90,11 +120,21 @@ done))
           `(,@_)))
 done))
 
+(define <HexChar>
+  (new 
+       (*parser (range #\0 #\9))
+       (*parser (range #\a #\f))
+
+       (*disj 2)
+done))
+
 (define <HexUnicodeChar>
   (new 
-       (*parser <hex-digit>)
-       (*parser <hex-digit>) *star
-       (*caten 2)
+       (*parser (char #\x))
+       (*parser <HexChar>)
+       (*parser <HexChar>) *star
+       (*caten 3)
+
 done))
 
 (define <Char>
@@ -113,4 +153,65 @@ done))
       
 done))
 
-(test-string <Char> "#\\space")
+;; --------------------------------
+;;           Number:
+;; --------------------------------
+
+(define <digit-0-9>
+  (range #\0 #\9))
+
+(define <digit-1-9>
+  (range #\1 #\9))
+
+(define <Natural>
+  (new (*parser (char #\0))
+       (*pack (lambda (_) 0))
+
+       (*parser <digit-1-9>)
+       (*parser <digit-0-9>) *star
+       (*caten 2)
+       (*pack-with
+  (lambda (a s)
+    (string->number
+     (list->string
+      `(,a ,@s)))))
+
+       (*disj 2)
+       done))
+
+(define <Integer>
+  (new (*parser (char #\+))
+       (*parser <Natural>)
+       (*caten 2)
+       (*pack-with
+  (lambda (++ n) n))
+
+       (*parser (char #\-))
+       (*parser <Natural>)
+       (*caten 2)
+       (*pack-with
+  (lambda (-- n) (- n)))
+
+       (*parser <Natural>)
+
+       (*disj 3)
+
+       done))
+
+(define <Fraction>
+  (new (*parser <Integer>)
+       (*parser (char #\/))
+       (*parser <Natural>)
+       (*guard (lambda (n) (not (zero? n))))
+       (*caten 3)
+       (*pack-with
+  (lambda (num div den)
+    (/ num den)))
+       done))
+
+(define <Number>
+  (new (*parser <Integer>)
+       (*parser <Fraction>)
+       (*disj 2)
+       done))
+(test-string <Number> "+5")

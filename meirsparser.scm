@@ -1,3 +1,3 @@
 (load "parser.so")
 
-(test-string <sexpr> "#\\a")
+(test-string <sexpr> "#\\x3a")
