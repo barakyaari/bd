@@ -50,7 +50,13 @@ done))
 (define <NamedChar>
   (new 
        (*parser (word "lambda"))
-       (*pack (lambda(a) (char->string a)))
+       (*parser (word "newline"))
+       (*parser (word "nul"))
+       (*parser (word "page"))
+       (*parser (word "return"))
+       (*parser (word "space"))
+       (*parser (word "tab"))
+       (*disj 7)
 done))
 
-(test-string <NamedChar> "lambda")
+(test-string <NamedChar> "tab")
