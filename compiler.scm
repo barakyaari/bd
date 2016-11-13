@@ -215,4 +215,26 @@ done))
        (*parser <Fractiodn>)
        (*disj 2)
        done))
-(test-string <Char> "#\\space")
+
+;; --------------------------------
+;;           Number:
+;; --------------------------------
+
+
+
+(define <StringVisibleChar>
+  (new (*parser (range #\  #\~))
+    ;; fix to be a string from space up.
+       done))
+
+(define <StringMetaChar>
+  (new (*parser (range #\  #\~))
+    ;; fix to be a meta string char.
+       done))
+
+(define <StringHexChar>
+  (new (*parser (range #\  #\~))
+    ;; fix to be a hex string char.
+       done))
+
+(test-string <StringVisibleChar> " espace")
