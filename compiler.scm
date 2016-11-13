@@ -149,7 +149,8 @@ done))
        (*caten 2)
        (*pack-with
         (lambda(a b)
-          (list->string `(,@a ,@b))))
+
+          (list->string `(#\ ,@b))))
       
 done))
 
@@ -211,7 +212,7 @@ done))
 
 (define <Number>
   (new (*parser <Integer>)
-       (*parser <Fraction>)
+       (*parser <Fractiodn>)
        (*disj 2)
        done))
-(test-string <Number> "+5")
+(test-string <Char> "#\\space")
