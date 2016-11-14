@@ -121,12 +121,12 @@ done))
 done))
 
 (define <HexChar>
-  (new 
-       (*parser (range #\0 #\9))
-       (*parser (range #\a #\f))
-
+  (new
+       (*parser <XXXX>)
+       (*parser <XX>)
        (*disj 2)
-done))
+       (*pack integer->char)
+       done))
 
 (define <HexUnicodeChar>
   (new 
@@ -212,7 +212,7 @@ done))
 
 (define <Number>
   (new (*parser <Integer>)
-       (*parser <Fractiodn>)
+       (*parser <Fraction>)
        (*disj 2)
        done))
 
@@ -228,13 +228,21 @@ done))
        done))
 
 (define <StringMetaChar>
-  (new (*parser (range #\  #\~))
+  (new (*parser (char #\\))
     ;; fix to be a meta string char.
        done))
 
 (define <StringHexChar>
-  (new (*parser (range #\  #\~))
+  (new 
+    (*parser (word "\\x"))
+    (*parser <HexChar>) *star
+    (*parser (word ";"))
+       (*caten 3)
+       (*pack-with
+        (lambda(intro hex colon)
+        
+            (list->string hex)))
     ;; fix to be a hex string char.
        done))
 
-(test-string <StringVisibleChar> " espace")
+(test-string <StringHexChar> "\\x0AB;")
