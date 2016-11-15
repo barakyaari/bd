@@ -1,8 +1,8 @@
 (load "compiler.scm")
 
-(define test "##")
+(define test "##(1 + 2)")
 
-(test-string <InfixPrefixExtensionPrefix> test)
+(test-string <sexpr> test)
 
 
 (display "\n- ---  Meirs parser: ----\n\n")

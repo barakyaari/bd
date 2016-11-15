@@ -287,6 +287,13 @@ done))
 ;;           Infix:
 ;; --------------------------------
 
+(define <InfixExpression>
+  (new 
+        (*parser <Number>)
+    ;(*delayed (lambda () <InfixAdd>)) 
+    ;(*disj 2)
+       done))
+
 
 (define <InfixPrefixExtensionPrefix>
   (new 
@@ -295,18 +302,24 @@ done))
         (*disj 2)
        done))
 
-
-(define <InfixExtension>
+(define <InfixAdd>
   (new 
-        (*parser <InfixPrefixExtensionPrefix)
-        (*parser <InfixExpression>)
-        (*disj 2)
+
+        (*parser (word "+"))
        done))
 
 
 (define <InfixExtension>
   (new 
-        (*parser <InfixPrefixExtensionPrefix)
+        (*parser <InfixPrefixExtensionPrefix>)
         (*parser <InfixExpression>)
-        (*disj 2)
+        (*caten 2)
+        (*pack-with
+          (labmda(pre expr)
+              expr))
+       done))
+
+(define <sexpr>
+  (new 
+        (*parser <InfixExtension>)
        done))
