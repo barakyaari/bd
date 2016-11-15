@@ -97,7 +97,6 @@ done))
        (*pack-with
         (lambda(a b)
           `(#\#  #\\)))
-
 done))
 
 (define <VisibleSimpleChar>
@@ -105,21 +104,38 @@ done))
   	 (*parser (range #\! #\~))
 done))
 
+(define ^<meta-char>
+  (lambda (str ch)
+    (new (*parser (word str))
+   (*pack (lambda (_) ch))
+   done)))
+
+
 (define <NamedChar>
   (new 
-       (*parser (word "lambda"))
-       (*parser (word "newline"))
-       (*parser (word "nul"))
-       (*parser (word "page"))
-       (*parser (word "return"))
-       (*parser (word "space"))
-       (*parser (word "tab"))
-       (*disj 7)
-       (*pack
-        (lambda(_)
-          `(,@_)))
-done))
+    (*parser (word "lambda"))
+    (*pack (lambda (_) (integer->char 955)))
 
+    (*parser (word "newline"))
+    (*pack (lambda (_) (integer->char 10)))
+
+    (*parser (word "nul"))
+    (*pack (lambda (_) (integer->char 0)))
+
+    (*parser (word "page"))
+    (*pack (lambda (_) (integer->char 12)))
+
+    (*parser (word "return"))
+    (*pack (lambda (_) (integer->char 13)))
+
+    (*parser (word "space"))
+    (*pack (lambda (_) (integer->char 32)))
+
+    (*parser (word "tab"))
+    (*pack (lambda (_) (integer->char 9)))
+
+       (*disj 7)
+       done))
 (define <HexChar>
   (new
        (*parser <XXXX>)
@@ -149,8 +165,7 @@ done))
        (*caten 2)
        (*pack-with
         (lambda(a b)
-
-          (list->string `(#\ ,@b))))
+          b))
       
 done))
 
@@ -217,9 +232,8 @@ done))
        done))
 
 ;; --------------------------------
-;;           Number:
+;;           String:
 ;; --------------------------------
-
 
 
 (define <StringVisibleChar>
@@ -244,5 +258,3 @@ done))
             (list->string hex)))
     ;; fix to be a hex string char.
        done))
-
-(test-string <StringHexChar> "\\x0AB;")
