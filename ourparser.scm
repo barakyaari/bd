@@ -1,11 +1,11 @@
 (load "compiler.scm")
 
-(define test "-0008/00012")
+(define test "#\\x00000aB")
 
-(test-string <Number> test)
+(test-string <Char> test)
 
 
-(display "\n----  Meirs parser: ----\n\n")
+(display "\n- ---  Meirs parser: ----\n\n")
 (load "parser.so")
 
 (test-string <sexpr> test)

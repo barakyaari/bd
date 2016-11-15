@@ -1,51 +1,4 @@
 (load "pc.scm")
-;; --------------------------------
-;;           Essentials:
-;; --------------------------------
-
-(define <hex-digit>
-  (let ((zero (char->integer #\0))
-  (lc-a (char->integer #\a))
-  (uc-a (char->integer #\A)))
-    (new (*parser (range #\0 #\9))
-   (*pack
-    (lambda (ch)
-      (- (char->integer ch) zero)))
-
-   (*parser (range #\a #\f))
-   (*pack
-    (lambda (ch)
-      (+ 10 (- (char->integer ch) lc-a))))
-
-   (*parser (range #\A #\F))
-   (*pack
-    (lambda (ch)
-      (+ 10 (- (char->integer ch) uc-a))))
-
-   (*disj 3)
-   done)))
-
-(define <X>
-  (new (*parser <hex-digit>)
-       done))
-
-(define <XX>
-  (new (*parser <hex-digit>)
-       (*parser <hex-digit>)
-       (*caten 2)
-       (*pack-with
-  (lambda (h l)
-    (+ l (* h 16))))
-       done))
-
-(define <XXXX>
-  (new (*parser <XX>)
-       (*parser <XX>)
-       (*caten 2)
-       (*pack-with
-  (lambda (h l)
-    (+ l (* 256 h))))
-       done))
 
 ;; --------------------------------
 ;;           Boolean:
@@ -54,19 +7,15 @@
   (new 
 	;; True:
   	(*parser (char #\#))
-       (*parser (char #\t))
-       (*parser (char #\T))
-       (*disj 2)
+       (*parser (char-ci #\t))
 
        (*caten 2)
        (*pack-with
        	(lambda (a b)
 	  #t))
 	;; False:
-  	(*parser (char #\#))
-       (*parser (char #\f))
-       (*parser (char #\F))
-       (*disj 2)
+  	   (*parser (char #\#))
+       (*parser (char-ci #\f))
 
        (*caten 2)
        (*pack-with
@@ -96,11 +45,7 @@ done))
   	 (*parser (range #\! #\~))
 done))
 
-(define ^<meta-char>
-  (lambda (str ch)
-    (new (*parser (word str))
-   (*pack (lambda (_) ch))
-   done)))
+
 
 
 (define <NamedChar>
@@ -131,11 +76,9 @@ done))
 
 (define <HexChar>
   (new
-       (*parser <XXXX>)
-       (*parser <XX>)
-      (*parser <X>)
-       (*disj 3)
-       (*pack integer->char)
+      (*parser (range #\0 #\9))
+      (*parser (range-ci #\a #\f))
+      (*disj 2)
        done))
 
 (define <HexUnicodeChar>
@@ -145,18 +88,18 @@ done))
        (*parser <HexChar>) *star
        (*caten 3)
        (*pack-with (lambda(x first rest)
-          first))
+        (integer->char
+          (string->number 
+              (list->string `(,first ,@rest)) 16))))
 done))
 
 (define <Char>
   (new 
        (*parser <CharPrefix>)
-
        (*parser <NamedChar>)
        (*parser <HexUnicodeChar>)
        (*parser <VisibleSimpleChar>)
        (*disj 3)
-
        (*caten 2)
        (*pack-with
         (lambda(a b)
@@ -240,8 +183,7 @@ done))
 
 
 (define <StringVisibleChar>
-  (new (*parser (range #\  #\~))
-    ;; fix to be a string from space up.
+  (new (*parser (range #\!  (integer->char (string->number "1114111"))))
        done))
 
 (define <StringMetaChar>
@@ -249,15 +191,18 @@ done))
     ;; fix to be a meta string char.
        done))
 
-(define <StringHexChar>
+    
+(define <StringChar>
   (new 
-    (*parser (word "\\x"))
-    (*parser <HexChar>) *star
-    (*parser (word ";"))
-       (*caten 3)
-       (*pack-with
-        (lambda(intro hex colon)
-        
-            (list->string hex)))
-    ;; fix to be a hex string char.
+       (*parser <StringVisibleChar>)
+       done))
+
+
+(define <String>
+  (new 
+    
+    (*parser (char #\"))
+    (*parser <StringChar>) *star
+    (*parser (char #\"))
+    (*caten 3)
        done))
