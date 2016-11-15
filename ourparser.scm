@@ -1,8 +1,8 @@
 (load "compiler.scm")
 
-(define test "#\\tab")
+(define test "-0008/00012")
 
-(test-string <Char> test)
+(test-string <Number> test)
 
 
 (display "\n----  Meirs parser: ----\n\n")

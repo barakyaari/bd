@@ -25,6 +25,10 @@
    (*disj 3)
    done)))
 
+(define <X>
+  (new (*parser <hex-digit>)
+       done))
+
 (define <XX>
   (new (*parser <hex-digit>)
        (*parser <hex-digit>)
@@ -41,18 +45,6 @@
        (*pack-with
   (lambda (h l)
     (+ l (* 256 h))))
-       done))
-
-(define <hex-char>
-  (new (*parser (word-ci "x"))
-
-       (*parser <XXXX>)
-       (*parser <XX>)
-       (*disj 2)
-       (*pack integer->char)
-
-       (*caten 2)
-       (*pack-with (lambda (x ch) ch))
        done))
 
 ;; --------------------------------
@@ -136,21 +128,24 @@ done))
 
        (*disj 7)
        done))
+
 (define <HexChar>
   (new
        (*parser <XXXX>)
        (*parser <XX>)
-       (*disj 2)
+      (*parser <X>)
+       (*disj 3)
        (*pack integer->char)
        done))
 
 (define <HexUnicodeChar>
   (new 
-       (*parser (char #\x))
+       (*parser (char-ci #\x))
        (*parser <HexChar>)
        (*parser <HexChar>) *star
        (*caten 3)
-
+       (*pack-with (lambda(x first rest)
+          first))
 done))
 
 (define <Char>
@@ -158,8 +153,8 @@ done))
        (*parser <CharPrefix>)
 
        (*parser <NamedChar>)
-       (*parser <VisibleSimpleChar>)
        (*parser <HexUnicodeChar>)
+       (*parser <VisibleSimpleChar>)
        (*disj 3)
 
        (*caten 2)
@@ -180,9 +175,11 @@ done))
   (range #\1 #\9))
 
 (define <Natural>
-  (new (*parser (char #\0))
-       (*pack (lambda (_) 0))
+  (new 
+  (*parser (char #\0)) *star
 
+  (*parser (char #\0))
+         (*pack (lambda (_) 0))
        (*parser <digit-1-9>)
        (*parser <digit-0-9>) *star
        (*caten 2)
@@ -193,6 +190,10 @@ done))
       `(,a ,@s)))))
 
        (*disj 2)
+      (*caten 2)
+      (*pack-with
+         (lambda (leadingzeros number)
+            number))
        done))
 
 (define <Integer>
@@ -226,8 +227,10 @@ done))
        done))
 
 (define <Number>
-  (new (*parser <Integer>)
+  (new 
        (*parser <Fraction>)
+       (*parser <Integer>)
+       
        (*disj 2)
        done))
 
