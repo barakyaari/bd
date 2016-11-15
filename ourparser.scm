@@ -1,8 +1,8 @@
 (load "compiler.scm")
 
-(define test "#\\x00000aB")
+(define test "\"hello\"")
 
-(test-string <Char> test)
+(test-string <String> test)
 
 
 (display "\n- ---  Meirs parser: ----\n\n")

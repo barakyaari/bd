@@ -200,9 +200,20 @@ done))
 
 (define <String>
   (new 
-    
-    (*parser (char #\"))
-    (*parser <StringChar>) *star
-    (*parser (char #\"))
-    (*caten 3)
+    (*parser (word "\""))
+
+    (*parser <StringChar>)
+    (*parser (word "\""))
+       *diff
+        *star
+
+    (*parser (word "\""))
+
+
+(*caten 3)
+
+    (*pack-with
+    (lambda(intro word outro)
+       (list->string word)
+          ))
        done))
