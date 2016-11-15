@@ -246,3 +246,67 @@ done))
     (lambda(intro word outro)
         (list->string word)))
        done))
+
+;; --------------------------------
+;;           Symbol:
+;; --------------------------------
+
+(define <SymbolChar>
+  (new 
+
+        (*parser (range #\0 #\9))
+        (*parser (range #\a #\z))
+        (*parser (range #\A #\Z))
+        (*parser (char #\^))
+        (*parser (char #\*))
+        (*parser (char #\-))
+        (*parser (char #\_))
+        (*parser (char #\=))
+        (*parser (char #\+))
+        (*parser (char #\<))
+        (*parser (char #\>))
+        (*parser (char #\?))
+        (*parser (char #\/))
+        (*disj 13)
+
+       done))
+
+(define <Symbol>
+  (new 
+        (*parser <SymbolChar>)
+        (*parser <SymbolChar>) *star
+        (*caten 2)
+        (*pack-with (lambda(first rest)
+                      (string->symbol
+                        (list->string `(,first ,@rest)))))
+
+       done))
+
+
+;; --------------------------------
+;;           Infix:
+;; --------------------------------
+
+
+(define <InfixPrefixExtensionPrefix>
+  (new 
+        (*parser (word "##"))
+        (*parser (word "#%"))
+        (*disj 2)
+       done))
+
+
+(define <InfixExtension>
+  (new 
+        (*parser <InfixPrefixExtensionPrefix)
+        (*parser <InfixExpression>)
+        (*disj 2)
+       done))
+
+
+(define <InfixExtension>
+  (new 
+        (*parser <InfixPrefixExtensionPrefix)
+        (*parser <InfixExpression>)
+        (*disj 2)
+       done))

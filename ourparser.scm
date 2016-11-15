@@ -1,8 +1,8 @@
 (load "compiler.scm")
 
-(define test "\"\x0000003bb; is the good sign\"")
+(define test "##")
 
-(test-string <String> test)
+(test-string <InfixPrefixExtensionPrefix> test)
 
 
 (display "\n- ---  Meirs parser: ----\n\n")
