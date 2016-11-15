@@ -187,14 +187,45 @@ done))
        done))
 
 (define <StringMetaChar>
-  (new (*parser (char #\\))
-    ;; fix to be a meta string char.
+  (new 
+    (*parser (word "\\\\"))
+       (*pack (lambda(_) #\\))
+    (*parser (word "\\\""))
+       (*pack (lambda(_) #\"))
+    (*parser (word "\t"))
+       (*pack (lambda(_) #\tab))
+    (*parser (word "\f"))
+       (*pack (lambda(_) #\page))
+    (*parser (word "\\n"))
+       (*pack (lambda(_) #\newline))
+    (*parser (word "\r"))
+       (*pack (lambda(_) #\return))
+       (*disj 6)
+
+       done))
+
+(define <StringHexChar>
+  (new 
+        (*parser (char #\\))
+    (*parser (char-ci #\x))
+    (*parser <HexChar>) *star
+    (*caten 3)
+    (*pack-with (lambda(slash x charlist)
+        (integer->char
+          (string->number 
+              (list->string charlist) 16))))
+
        done))
 
     
 (define <StringChar>
   (new 
-       (*parser <StringVisibleChar>)
+
+        (*parser <StringMetaChar>)
+        (*parser <StringVisibleChar>)
+        (*parser <StringHexChar>)
+
+        (*disj 3)
        done))
 
 
@@ -206,7 +237,6 @@ done))
     (*parser (word "\""))
        *diff
         *star
-
     (*parser (word "\""))
 
 
@@ -214,6 +244,5 @@ done))
 
     (*pack-with
     (lambda(intro word outro)
-       (list->string word)
-          ))
+        (list->string word)))
        done))

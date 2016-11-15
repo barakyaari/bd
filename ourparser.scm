@@ -1,6 +1,6 @@
 (load "compiler.scm")
 
-(define test "\"hello\"")
+(define test "\"\x0000003bb; is the good sign\"")
 
 (test-string <String> test)
 
