@@ -307,7 +307,9 @@ done))
 (define <ImproperList>
   (new 
         (*parser (char #\())
+        (*parser <sexpr>)
         (*parser <sexpr>)*star
+        (*disj 2)
         (*parser (char #\)))
         (*caten 3)
         (*pack-with
