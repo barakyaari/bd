@@ -284,6 +284,7 @@ done))
 
 (define <sexpr>
   (new 
+        (*parser (char #\ ))*star
         (*parser <Boolean>)
         (*parser <Char>)
         (*parser <Number>)
@@ -291,6 +292,13 @@ done))
         (*parser <Symbol>)
         (*delayed (lambda () <ProperList>))
         (*disj 6) 
+
+        (*parser (char #\ ))*star
+
+        (*caten 3)
+        (*pack-with
+        (lambda (space expr space2)
+        expr))
        done))
 
 (define <ProperList>
@@ -376,9 +384,4 @@ done))
         (*pack-with
           (labmda(pre expr)
               expr))
-       done))
-
-(define <sexpr>
-  (new 
-        (*parser <InfixExtension>)
        done))
