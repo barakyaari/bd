@@ -282,6 +282,63 @@ done))
 
        done))
 
+(define <sexpr>
+  (new 
+        (*parser <Boolean>)
+        (*parser <Char>)
+        (*parser <Number>)
+        (*parser <String>)
+        (*parser <Symbol>)
+        (*delayed (lambda () <ProperList>))
+        (*disj 6) 
+       done))
+
+(define <ProperList>
+  (new 
+        (*parser (char #\())
+        (*parser <sexpr>)*star
+        (*parser (char #\)))
+        (*caten 3)
+        (*pack-with
+          (lambda(open expr close)
+          `(,@expr )))
+       done))
+
+(define <ImproperList>
+  (new 
+        (*parser (char #\())
+        (*parser <sexpr>)*star
+        (*parser (char #\)))
+        (*caten 3)
+        (*pack-with
+          (lambda(open expr close)
+          `(,@expr )))
+       done))
+
+(define <Vector>
+  (new 
+        (*parser <sexpr>)*star
+       done))
+
+(define <Quoted>
+  (new 
+        (*parser <sexpr>)*star
+       done))
+
+(define <QuasiQuoted>
+  (new 
+        (*parser <sexpr>)*star
+       done))
+
+(define <Unquoted>
+  (new 
+        (*parser <sexpr>)*star
+       done))
+
+(define <UnquoteAndSpliced>
+  (new 
+        (*parser <sexpr>)*star
+       done))
 
 ;; --------------------------------
 ;;           Infix:
