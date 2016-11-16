@@ -1,6 +1,6 @@
 (load "compiler.scm")
 
-(define test "  my change")
+(define test "  Hello world")
 ;finished my change!
 (test-string <sexpr> test)
 
