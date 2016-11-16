@@ -1,6 +1,6 @@
 (load "compiler.scm")
 
-(define test "  a")
+(define test "  asda")
 
 (test-string <sexpr> test)
 
