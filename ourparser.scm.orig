@@ -1,7 +1,12 @@
 (load "compiler.scm")
 
-(define test "Hello world")
+<<<<<<< HEAD
+(define test "  my change")
 ;finished my change!
+=======
+(define test "  Hello world")
+
+>>>>>>> test2
 (test-string <sexpr> test)
 
 
