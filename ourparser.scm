@@ -1,11 +1,12 @@
 (load "compiler.scm")
 
-(define test "(   )")
+(define test " 	 , @  abc")
 
 (test-string <sexpr> test)
 
 
 (display "\n- ---  Meirs parser: ----\n\n")
 (load "parser.so")
+
 
 (test-string <sexpr> test)

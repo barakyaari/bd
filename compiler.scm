@@ -258,6 +258,9 @@ done))
         (list->string word)))
        done))
 
+
+
+
 ;; --------------------------------
 ;;           Symbol:
 ;; --------------------------------
@@ -293,6 +296,9 @@ done))
 
        done))
 
+; ====================================================
+; ====================================================
+
 (define <sexpr>
   (new 
         (*parser <EmptyParser>)
@@ -304,7 +310,12 @@ done))
         (*delayed (lambda () <ProperList>))
         (*delayed (lambda () <ImproperList>))
         (*delayed (lambda () <Vector>))
-        (*disj 8) 
+        (*delayed (lambda () <Quoted>))
+        (*delayed (lambda () <QuasiQuoted>))
+        (*delayed (lambda () <UnquoteAndSpliced>))
+        (*delayed (lambda () <Unquoted>))
+
+        (*disj 12) 
 
         (*parser <EmptyParser>)
 
@@ -313,6 +324,20 @@ done))
         (lambda (space expr space2)
         expr))
        done))
+; ====================================================
+; ====================================================
+
+
+
+
+
+
+
+
+
+
+
+
 
 (define <ProperList>
   (new 
@@ -321,9 +346,9 @@ done))
 
         (*parser <sexpr>)*star
         (*parser (char #\)))
-        (*caten 3)
+        (*caten 4)
         (*pack-with
-          (lambda(open expr1 close)
+          (lambda(open emptyparser expr1 close)
             (display 'properList)
           `(,@expr1 )))
        done))
@@ -362,22 +387,44 @@ done))
 
 (define <Quoted>
   (new 
-        (*parser <sexpr>)*star
+        (*parser (char #\'))
+        (*parser <sexpr>)
+        (*caten 2)
+        (*pack-with
+          (lambda(sign e)
+              `(,'quote ,@e)))
        done))
 
 (define <QuasiQuoted>
   (new 
-        (*parser <sexpr>)*star
+        (*parser (char #\`))
+        (*parser <sexpr>)
+        (*caten 2)
+        (*pack-with
+          (lambda(sign e)
+              `(,'quasiquote ,@e)))
        done))
 
 (define <Unquoted>
   (new 
-        (*parser <sexpr>)*star
+        (*parser (char #\,))
+        (*parser <sexpr>)
+        (*caten 2)
+        (*pack-with
+          (lambda(sign e)
+              `(,'unquote ,@e)))
        done))
 
 (define <UnquoteAndSpliced>
   (new 
-        (*parser <sexpr>)*star
+        (*parser (char #\,))
+        (*parser (char #\@))
+
+        (*parser <sexpr>)
+        (*caten 3)
+        (*pack-with
+          (lambda(sign strudel e)
+              (list 'unquote-splicing e)))
        done))
 
 ;; --------------------------------
