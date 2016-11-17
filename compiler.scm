@@ -1,5 +1,16 @@
 (load "pc.scm")
 
+(define <EmptyParser>
+  (new (*parser (range 
+      (integer->char 
+            (string->number "1"))
+
+      (integer->char 
+            (string->number "32"))))
+             *star
+       done))
+
+
 ;; --------------------------------
 ;;           Boolean:
 ;; --------------------------------
@@ -284,16 +295,18 @@ done))
 
 (define <sexpr>
   (new 
-        (*parser (char #\ ))*star
+        (*parser <EmptyParser>)
         (*parser <Boolean>)
         (*parser <Char>)
         (*parser <Number>)
         (*parser <String>)
         (*parser <Symbol>)
         (*delayed (lambda () <ProperList>))
-        (*disj 6) 
+        (*delayed (lambda () <ImproperList>))
+        (*delayed (lambda () <Vector>))
+        (*disj 8) 
 
-        (*parser (char #\ ))*star
+        (*parser <EmptyParser>)
 
         (*caten 3)
         (*pack-with
@@ -304,30 +317,47 @@ done))
 (define <ProperList>
   (new 
         (*parser (char #\())
+        (*parser <EmptyParser>)
+
         (*parser <sexpr>)*star
         (*parser (char #\)))
         (*caten 3)
         (*pack-with
-          (lambda(open expr close)
-          `(,@expr )))
+          (lambda(open expr1 close)
+            (display 'properList)
+          `(,@expr1 )))
        done))
 
 (define <ImproperList>
   (new 
         (*parser (char #\())
         (*parser <sexpr>)
-        (*parser <sexpr>)*star
-        (*disj 2)
+        (*parser <sexpr>) *star
+        (*caten 2)
+        (*pack-with (lambda (a b) 
+          `(,a ,@b)))
+        (*parser (char #\.))
+        (*parser <sexpr>)
         (*parser (char #\)))
-        (*caten 3)
+        (*caten 5)
         (*pack-with
-          (lambda(open expr close)
-          `(,@expr )))
+          (lambda(open expr1 point expr2 close)
+            (display 'improperList)
+          `(,@expr1  . ,expr2 )))
+
        done))
 
 (define <Vector>
   (new 
-        (*parser <sexpr>)*star
+        (*parser (char #\#))
+        (*parser (char #\())
+        (*parser <sexpr>) *star
+
+        (*parser (char #\)))
+        (*caten 4)
+        (*pack-with
+          (lambda (a b lista d)
+            (list->vector lista )))
        done))
 
 (define <Quoted>
@@ -375,13 +405,3 @@ done))
         (*parser (word "+"))
        done))
 
-
-(define <InfixExtension>
-  (new 
-        (*parser <InfixPrefixExtensionPrefix>)
-        (*parser <InfixExpression>)
-        (*caten 2)
-        (*pack-with
-          (labmda(pre expr)
-              expr))
-       done))
