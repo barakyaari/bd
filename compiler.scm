@@ -181,8 +181,12 @@
   (new 
     (*parser <Fraction>)
     (*parser <Integer>)
-    
     (*disj 2)
+    (*pack(lambda(_)
+            (display "Number: ")
+            (display _)
+            (display "\n")
+             _))
     done))
 
 ;; --------------------------------
@@ -309,9 +313,10 @@
     (*delayed (lambda () <QuasiQuoted>))
     (*delayed (lambda () <UnquoteAndSpliced>))
     (*delayed (lambda () <Unquoted>))
+    (*delayed (lambda () <InfixExtension>))
+
     
-    
-    (*disj 12) 
+    (*disj 13) 
     
     (*parser <EmptyParser>)
     
@@ -422,15 +427,54 @@
 ;;           Infix:
 ;; --------------------------------
 
+(define <BinaryOperator>
+    (new
+    (*parser (char #\+))
+    (*pack
+      (lambda(_)
+        (display "BinaryOperator\n")
+           _))
+    done))
+
+(define <BinaryComplexExpression>
+    (new
+    (*delayed (lambda () <BinaryExpression>))
+    (*parser <BinaryOperator>)
+    (*caten 2)
+        *plus
+    (*parser <BinaryOperator>)
+
+    (*parser <Number>)
+    (*caten 3)
+    done))
+
+(define <BinaryAtomicExpression>
+    (new
+    (*parser <Number>)
+    (*parser <BinaryOperator>)
+    (*parser <Number>)
+    (*caten 3)
+    done))
+
+(define <BinaryExpression>
+    (new
+    (*parser <BinaryAtomicExpression>)
+    (*parser <BinaryOperator>)
+    (*parser <Number>)
+    (*caten 3)
+    done))
+
+
 (define <InfixExpression>
-  (new 
-    (*delayed (lambda () <InfixParen>))
-    
+    (new
+    (*parser <BinaryExpression>)
     (*parser <Number>)
     
-    (*delayed (lambda () <InfixAdd>))
-    
-    (*disj 3)
+    (*disj 2)
+    (*pack
+      (lambda(_)
+        (display "InfixExpression\n")
+           _))
     done))
 
 
@@ -444,34 +488,39 @@
     (*caten 3)
     done))
 
-(define <InfixAdd>
-  (new 
-    (*parser <EmptyParser>)
-    (*parser <InfixExpression>)
-    (*parser <EmptyParser>)
-    (*parser (char #\+))
-    (*parser <EmptyParser>)
-    (*parser <Number>)
-    (*parser <EmptyParser>)
-    
-    ;(*parser <InfixExpression>) 
-    (*caten 7)
-    (*pack-with (lambda (space1 infix1 space2 plus space3 infix2 space4)
-                  (display "Infix Add\n")
-                  `(+ ,infix1 ,infix2)))
-    done))
+
 
 (define <InfixParen>
   (new 
     (*parser (char #\())
     (*parser <InfixExpression>) 
-             
     (*parser (char #\))) 
     (*caten 3)
     (*pack-with 
       (lambda(open add close)
-        ` (,@add)))
+         (display "Infix Paren\n")
+        `(,@add)))
+    done))
+
+
+
+
+(define <InfixAdd>
+  (new 
+    (*parser <EmptyParser>)
+    (*parser <Number>)
     
+    (*parser <EmptyParser>)
+    (*parser (char #\+))
+    (*parser <EmptyParser>)
+    (*parser <InfixExpression>)
+
+    (*parser <EmptyParser>)
+    
+    (*caten 7)
+    (*pack-with (lambda (space1 infix1 space2 plus space3 infix2 space4)
+                  (display "Infix Add\n")
+                  `(+ ,infix1 ,infix2)))
     done))
 
 
@@ -481,6 +530,6 @@
     (*parser <InfixExpression>)
     (*caten 2) 
     (*pack-with (lambda (prefix expre)
-                  (display "Infix Extention\n")
+    (display "Infix Extention\n")
                   expre))
     done))
