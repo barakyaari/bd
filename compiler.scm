@@ -427,50 +427,14 @@
 ;;           Infix:
 ;; --------------------------------
 
-(define <BinaryOperator>
-    (new
-    (*parser (char #\+))
-    (*pack
-      (lambda(_)
-        (display "BinaryOperator\n")
-           _))
-    done))
-
-(define <BinaryComplexExpression>
-    (new
-    (*delayed (lambda () <BinaryExpression>))
-    (*parser <BinaryOperator>)
-    (*caten 2)
-        *plus
-    (*parser <BinaryOperator>)
-
-    (*parser <Number>)
-    (*caten 3)
-    done))
-
-(define <BinaryAtomicExpression>
-    (new
-    (*parser <Number>)
-    (*parser <BinaryOperator>)
-    (*parser <Number>)
-    (*caten 3)
-    done))
-
-(define <BinaryExpression>
-    (new
-    (*parser <BinaryAtomicExpression>)
-    (*parser <BinaryOperator>)
-    (*parser <Number>)
-    (*caten 3)
-    done))
-
-
 (define <InfixExpression>
+
     (new
-    (*parser <BinaryExpression>)
+    (*delayed (lambda () <InfixAdd>))
+    (*delayed (lambda () <InfixParen>))
     (*parser <Number>)
     
-    (*disj 2)
+    (*disj 3)
     (*pack
       (lambda(_)
         (display "InfixExpression\n")
