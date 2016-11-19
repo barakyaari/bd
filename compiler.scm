@@ -407,14 +407,31 @@
                     (list->string _))))
     done))
 
+(define <InfixFinal>
+  (new
+    (*parser <EmptyParser>) 
+    
+    ;Number or any Infix symbol:
+    (*parser <Number>)
+    (*parser <InfixSymbol>)
+    *star
+    (*pack 
+      (lambda(infixSymbol)
+       (string->symbol (list->string infixSymbol))))
+    (*disj 2)
+    
+    (*parser <EmptyParser>)
+    
+    (*caten 3)
+    (*pack-with (lambda (space1 expression space2)
+      expression))
+    done))
 
 (define <InfixParen>
     (new
     (*parser (char #\())
     (*parser <EmptyParser>)
-    (*delayed (lambda () <InfixSub>))
-    (*delayed (lambda () <InfixAdd>))
-    (*disj 2)
+    (*delayed (lambda () <InfixAddOrSub>))
 
     (*parser <EmptyParser>)
     (*parser (char #\)))
@@ -425,115 +442,54 @@
            `(- ,expression)))
     done))
 
-(define <InfixNeg>
-    (new
-    (*parser <EmptyParser>)
-    (*parser (char #\-))
-    (*parser <EmptyParser>)
-    (*delayed (lambda () <InfixExpression>))
-    (*caten 4)
-    
-    (*pack-with
-        (lambda (space minus space2 expression)
-           `(- ,expression)))
-    done))
-
-(define <InfixMul>
-    (new
-    (*parser <Number>)
-    (*parser <EmptyParser>)
-    (*parser (char #\*))
-    (*parser <EmptyParser>)
-    (*parser <Number>)
-    (*parser <EmptyParser>)
-
-    (*caten 5) ;(Sign + number remain)
-    (*pack-with
-        (lambda (space mul space2 num2 space3)
-           num2))
-    *star ;( (Sign+number)*)
-    (*caten 2) ;(number (Sign+number)*)
-    
-    (*pack-with (lambda (num2 lista)
-        (display "Add\n")
-                  (letrec 
-                    ((loopPrint
-                      (lambda (num1 lista1)
-                        (if (equal? (length lista1) 0) num1
-                        (if (equal? (length lista1) 1) `(* ,num1 ,@lista1)
-                            ;Longer that 1:
-                            (loopPrint `(* ,num1 ,(car lista1)) (cdr lista1)))))))
-                              (loopPrint num2 lista)
-                            )))
-    done))
-
-(define <InfixSub>
-    (new
-    (*parser <Number>)
-    
-    (*parser <EmptyParser>)
-    (*parser (char #\-))
-    (*parser <EmptyParser>)
-    (*parser <Number>)
-    (*parser <EmptyParser>)
-
-    (*caten 5) ;(Power + number remain)
-    (*pack-with
-        (lambda (space add space2 num2 space3)
-           num2))
-    *star ;( (power+number)*)
-    (*caten 2) ;(number (power+number)*)
-    
-    (*pack-with (lambda (num2 lista)
-        (display "Add\n")
-                  (letrec 
-                    ((loopPrint
-                      (lambda (num1 lista1)
-                        (if (equal? (length lista1) 0) num1
-                        (if (equal? (length lista1) 1) `(- ,num1 ,@lista1)
-                            ;Longer that 1:
-                            (loopPrint `(- ,num1 ,(car lista1)) (cdr lista1)))))))
-                              (loopPrint num2 lista)
-                            )))
-    done))
-
-
-(define <InfixAdd>
-    (new
-    (*parser <Number>)
-    
-    (*parser <EmptyParser>)
-    (*parser (char #\+))
-    (*parser <EmptyParser>)
-    (*parser <Number>)
-    (*parser <EmptyParser>)
-
-    (*caten 5) ;(Power + number remain)
-    (*pack-with
-        (lambda (space add space2 num2 space3)
-           num2))
-    *star ;( (power+number)*)
-    (*caten 2) ;(number (power+number)*)
-    
-    (*pack-with (lambda (num2 lista)
-        (display "Add\n")
-                  (letrec 
-                    ((loopPrint
-                      (lambda (num1 lista1)
-                        (if (equal? (length lista1) 0) num1
-                        (if (equal? (length lista1) 1) `(+ ,num1 ,@lista1)
-                            ;Longer that 1:
-                            (loopPrint `(+ ,num1 ,(car lista1)) (cdr lista1)))))))
-                              (loopPrint num2 lista)
-                            )))
-    done))
-
 (define <PowerSymbol>
     (new
     (*parser (word "**"))
     (*parser (char #\^))
     (*disj 2)
     done))
+
+(define <InfixArrayGet>
+    (new
+    (*parser <EmptyParser>)
+    (*parser <InfixFinal>)
+    (*parser <EmptyParser>)
+    (*parser (char #\[))
+    (*parser <EmptyParser>)
+    
+    (*delayed (lambda () <InfixAddOrSub>))
+    
+    
+    (*parser <EmptyParser>)
+    (*parser (char #\]))
+    (*parser <EmptyParser>)
+
+    (*caten 7)
+    (*pack-with
+      (lambda (space1 open space2 addOrSub space3 close space4)
+        addOrSub
+        ))
+    *star
+    (*caten 2)
+    (*pack-with (lambda (array lista)
+        (display "power\n")
+                  (letrec 
+                    ((loopPrint
+                      (lambda (num1 lista1)
+                        (if (equal? (length lista1) 0) num1
+                        (if (equal? (length lista1) 1) `(vector-ref ,num1 ,@lista1)
+                        (if (equal? (length lista1) 2)
+                            `(vector-ref ,num1 (vector-ref ,(car lista1) ,(cadr lista1)))
+                            ;Longer that 2:
+                            `(vector-ref ,num1 ,(loopPrint (car lista1) (cdr lista1)))))))))
+                              (loopPrint array lista)
+                            )))
+    (*parser <EmptyParser>)
+    (*caten 3)
+    (*pack-with (lambda (space expression space2)
+                  expression))
+    done))
+        
 
 (define <InfixPow>
     (new
@@ -566,27 +522,193 @@
                             )))
     done))
 
+(define <InfixDiv>
+    (new
+    (*parser <EmptyParser>)
+
+    (*parser <InfixPow>)
+    (*parser <EmptyParser>)
+    (*parser (char #\/))
+    (*parser <EmptyParser>)
+    (*parser <InfixPow>)
+    (*parser <EmptyParser>)
+
+    (*caten 5) ;(Sign + number remain)
+    (*pack-with
+        (lambda (space div space2 num2 space3)
+           num2))
+    *star ;( (Sign+number)*)
+    (*caten 2) ;(number (Sign+number)*)
+    
+    (*pack-with (lambda (num2 lista)
+        (display "Div\n")
+                  (letrec 
+                    ((loopPrint
+                      (lambda (num1 lista1)
+                        (if (equal? (length lista1) 0) num1
+                        (if (equal? (length lista1) 1) `(/ ,num1 ,@lista1)
+                            ;Longer that 1:
+                            (loopPrint `(/ ,num1 ,(cadar lista1)) (cdr lista1)))))))
+                              (loopPrint num2 lista)
+                            )))
+    (*parser <EmptyParser>)
+    (*caten 3)
+    (*pack-with (lambda (space1 expression space2)
+            expression))
+    done))
+
+(define <InfixMul>
+    (new
+    (*parser <EmptyParser>)
+
+    (*parser <InfixPow>)
+    (*parser <EmptyParser>)
+    (*parser (char #\*))
+    (*parser <EmptyParser>)
+    (*parser <InfixPow>)
+    (*parser <EmptyParser>)
+
+    (*caten 5) ;(Sign + number remain)
+    (*pack-with
+        (lambda (space mul space2 num2 space3)
+           num2))
+    *star ;( (Sign+number)*)
+    (*caten 2) ;(number (Sign+number)*)
+    
+    (*pack-with (lambda (num2 lista)
+        (display "Mul\n")
+                  (letrec 
+                    ((loopPrint
+                      (lambda (num1 lista1)
+                        (if (equal? (length lista1) 0) num1
+                        (if (equal? (length lista1) 1) `(* ,num1 ,@lista1)
+                            ;Longer that 1:
+                            (loopPrint `(* ,num1 ,(cadar lista1)) (cdr lista1)))))))
+                              (loopPrint num2 lista)
+                            )))
+    (*parser <EmptyParser>)
+    (*caten 3)
+    (*pack-with (lambda (space1 expression space2)
+            expression))
+    done))
+
+(define <InfixAddOrSub>
+    (new
+    (*parser <EmptyParser>)
+    
+    (*parser <InfixMul>)
+    (*parser <InfixDiv>)
+    (*disj 2)
+        
+    (*parser <EmptyParser>)
+    (*parser (word "+"))
+    (*parser (word "-"))
+    (*disj 2)
+
+    (*parser <EmptyParser>)
+    (*parser <InfixMul>)
+    (*parser <InfixDiv>)
+    (*disj 2)
+    (*parser <EmptyParser>)
+
+    (*caten 5)
+    (*pack-with
+        (lambda (space1 addOrSub space2 num2 space3)
+           `(,(string->symbol (list->string addOrSub))
+            ,num2)))
+    *star
+    (*caten 2)
+    
+    (*pack-with (lambda (num2 lista)
+        (display "AddOrSub\n")
+                  (letrec 
+                    ((loopPrint
+                      (lambda (num1 lista1)
+                        (if (equal? (length lista1) 0) num1
+                        (if (equal? (length lista1) 1) `(,(caar lista1) ,num1 ,(cadar lista1))
+                            ;Longer that 1:
+                            (loopPrint `(,(caar lista1) ,num1 ,(cadar lista1)) (cdr lista1)))))))
+                              (loopPrint num2 lista)
+                            )))
+    (*parser <EmptyParser>)
+    (*caten 3)
+
+    (*pack-with 
+      (lambda (space1 expression space2)
+          expression))
+    done))
+
+(define <InfixNeg>
+    (new
+    (*parser <EmptyParser>)
+    (*parser (char #\-))
+    (*parser <EmptyParser>)
+    (*delayed (lambda () <InfixExpression>))
+    (*caten 4)
+    
+    (*pack-with
+        (lambda (space minus space2 expression)
+           `(- ,expression)))
+    done))
+
+(define <InfixArgList>
+  (new
+     
+    (*parser <EmptyParser>)
+    
+    (*parser <InfixAddOrSub>)
+    
+    (*parser <EmptyParser>)
+    (*parser (char #\,))
+    (*parser <EmptyParser>)
+    (*parser <InfixAddOrSub>)
+
+    (*parser <EmptyParser>)
+    (*caten 5)
+    (*pack-with 
+      (lambda (space1 psik space2 addOrSub space3)
+                  addOrSub
+                  ))
+    *star
+    (*parser <EmptyParser>)
+    (*caten 4)
+    (*pack-with 
+      (lambda (space1 addOrSub1 list space2)
+        `(,addOrSub1 ,@list)))
+    (*parser <epsilon>) ;In Meir's parsers
+    (*disj 2)
+    done))
+    
 (define <InfixFuncall>
   (new
      
     (*parser <EmptyParser>)
-    (*parser <InfixAdd>)
-    (*parser <InfixSub>)
-    (*disj 2)
+    
+    
+    (*parser <InfixAddOrSub>)
+
     (*parser <EmptyParser>)
-    (*caten 3)
-    (*pack-with (lambda (space1 addorsub space2)
-                  addorsub))
     (*parser (char #\())
     (*parser <EmptyParser>)
     (*parser <InfixArgList>)
     (*parser <EmptyParser>)
-    (*parser (char #\))
+    (*parser (char #\)))
+    (*parser <EmptyParser>)
+    (*caten 8)
+    (*pack-with 
+      (lambda (function space open space1 arglist space2 close space3)
+                  `(,function ,@arglist)))
+    
+    (*parser <InfixAddOrSub>)
+
+    (*disj 2)
     (*parser <EmptyParser>)
     (*caten 3)
-    (*pack-with (lambda (open space1 arglist space2 close space3)
-                  addorsub))
+    (*pack-with 
+      (lambda (space1 functionOrExpression space2)
+                  functionOrExpression))
         done))
+
 
 (define <InfixPrefixExtensionPrefix>
   (new 
@@ -617,13 +739,16 @@
       (*parser <InfixNeg>)
       (*parser <InfixSexprEscape>)
       (*parser <InfixFuncall>)
-      (*parser <InfixAdd>)
-      (*parser <InfixSub>)
-      (*disj 5)
+      (*parser <InfixAddOrSub>)
+
+      ;(*parser <InfixArrayGet>)
+
+      (*disj 4)
       (*parser <EmptyParser>)
 
       (*caten 3)
       (*pack-with (lambda (space expression space2)
+                    (display "InfixExpression\n")
                     expression ))
       done))
 

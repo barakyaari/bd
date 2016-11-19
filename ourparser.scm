@@ -1,7 +1,7 @@
 (load "compiler.scm")
 (display "Test starting:\n")
-(define test "##1+2")
-(test-string <InfixSymbol> test)
+(define test "##1-2")
+(test-string <sexpr> test)
 
 
 (display "\n- ---  Meirs parser: ----\n\n")
