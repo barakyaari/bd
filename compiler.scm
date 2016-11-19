@@ -389,6 +389,49 @@
 ;; --------------------------------
 ;;           Infix:
 ;; --------------------------------
+(define <InfixNeg>
+    (new
+    (*parser <EmptyParser>)
+    (*parser (char #\-))
+    (*parser <EmptyParser>)
+    (*delayed (lambda () <InfixExpression>))
+    (*caten 4)
+    
+    (*pack-with
+        (lambda (space minus space expression)
+           `(- ,expression)))
+    done))
+
+(define <InfixSub>
+    (new
+    (*parser <Number>)
+    
+    (*parser <EmptyParser>)
+    (*parser (char #\-))
+    (*parser <EmptyParser>)
+    (*parser <Number>)
+    (*parser <EmptyParser>)
+
+    (*caten 5) ;(Power + number remain)
+    (*pack-with
+        (lambda (space add space2 num2 space3)
+           num2))
+    *star ;( (power+number)*)
+    (*caten 2) ;(number (power+number)*)
+    
+    (*pack-with (lambda (num2 lista)
+        (display "Add\n")
+                  (letrec 
+                    ((loopPrint
+                      (lambda (num1 lista1)
+                        (if (equal? (length lista1) 0) num1
+                        (if (equal? (length lista1) 1) `(- ,num1 ,@lista1)
+                            ;Longer that 1:
+                            (loopPrint `(- ,num1 ,(car lista1)) (cdr lista1)))))))
+                              (loopPrint num2 lista)
+                            )))
+    done))
+
 
 (define <InfixAdd>
     (new
@@ -461,7 +504,7 @@
 
 (define <InfixExpression>
     (new
-    (*parser <InfixPow>)
+    (*parser <InfixNeg>)
     done))
 
 (define <InfixPrefixExtensionPrefix>
