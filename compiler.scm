@@ -54,9 +54,6 @@
   	 (*parser (range #\! #\~))
     done))
 
-
-
-
 (define <NamedChar>
   (new 
     (*parser (word "lambda"))
@@ -259,9 +256,6 @@
         (list->string word)))
     done))
 
-
-
-
 ;; --------------------------------
 ;;           Symbol:
 ;; --------------------------------
@@ -389,6 +383,48 @@
 ;; --------------------------------
 ;;           Infix:
 ;; --------------------------------
+
+(define <Infix SymbolChar>
+  (new 
+    
+    (*parser (range #\0 #\9))
+    (*parser (range #\a #\z))
+    (*parser (range #\A #\Z))
+    (*parser (char #\_))
+    (*parser (char #\=))
+    (*parser (char #\<))
+    (*parser (char #\>))
+    (*parser (char #\?))
+    (*disj 13)
+    
+    done))
+
+(define <InfixSymbol>
+  (new 
+    (*parser <SymbolChar>) *plus
+    (*pack (lambda(_)
+                  (string->symbol
+                    (list->string _))))
+    done))
+
+
+(define <InfixParen>
+    (new
+    (*parser (char #\())
+    (*parser <EmptyParser>)
+    (*delayed (lambda () <InfixSub>))
+    (*delayed (lambda () <InfixAdd>))
+    (*disj 2)
+
+    (*parser <EmptyParser>)
+    (*parser (char #\)))
+    (*caten 5)
+    
+    (*pack-with
+        (lambda (open space1 expression space2 close)
+           `(- ,expression)))
+    done))
+
 (define <InfixNeg>
     (new
     (*parser <EmptyParser>)
@@ -398,8 +434,37 @@
     (*caten 4)
     
     (*pack-with
-        (lambda (space minus space expression)
+        (lambda (space minus space2 expression)
            `(- ,expression)))
+    done))
+
+(define <InfixMul>
+    (new
+    (*parser <Number>)
+    (*parser <EmptyParser>)
+    (*parser (char #\*))
+    (*parser <EmptyParser>)
+    (*parser <Number>)
+    (*parser <EmptyParser>)
+
+    (*caten 5) ;(Sign + number remain)
+    (*pack-with
+        (lambda (space mul space2 num2 space3)
+           num2))
+    *star ;( (Sign+number)*)
+    (*caten 2) ;(number (Sign+number)*)
+    
+    (*pack-with (lambda (num2 lista)
+        (display "Add\n")
+                  (letrec 
+                    ((loopPrint
+                      (lambda (num1 lista1)
+                        (if (equal? (length lista1) 0) num1
+                        (if (equal? (length lista1) 1) `(* ,num1 ,@lista1)
+                            ;Longer that 1:
+                            (loopPrint `(* ,num1 ,(car lista1)) (cdr lista1)))))))
+                              (loopPrint num2 lista)
+                            )))
     done))
 
 (define <InfixSub>
@@ -473,7 +538,6 @@
 (define <InfixPow>
     (new
     (*parser <Number>)
-    
     (*parser <EmptyParser>)
     (*parser <PowerSymbol>)
     (*parser <EmptyParser>)
@@ -504,7 +568,7 @@
 
 (define <InfixExpression>
     (new
-    (*parser <InfixNeg>)
+    (*parser <InfixAdd>)
     done))
 
 (define <InfixPrefixExtensionPrefix>
