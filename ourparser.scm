@@ -1,6 +1,6 @@
 (load "compiler.scm")
 (display "Test starting:\n")
-(define test "##1-2")
+(define test "##1*2")
 (test-string <sexpr> test)
 
 

@@ -522,21 +522,24 @@
                             )))
     done))
 
-(define <InfixDiv>
+(define <InfixMulOrDiv>
     (new
     (*parser <EmptyParser>)
 
     (*parser <InfixPow>)
     (*parser <EmptyParser>)
-    (*parser (char #\/))
+    (*parser (word "*"))
+    (*parser (word "/"))
+    (*disj 2)
     (*parser <EmptyParser>)
     (*parser <InfixPow>)
     (*parser <EmptyParser>)
 
     (*caten 5) ;(Sign + number remain)
     (*pack-with
-        (lambda (space div space2 num2 space3)
-           num2))
+        (lambda (space mulOrDiv space2 num2 space3)
+            `(,(string->symbol
+                  (list->string mulOrDiv)) ,num2)))
     *star ;( (Sign+number)*)
     (*caten 2) ;(number (Sign+number)*)
     
@@ -546,44 +549,9 @@
                     ((loopPrint
                       (lambda (num1 lista1)
                         (if (equal? (length lista1) 0) num1
-                        (if (equal? (length lista1) 1) `(/ ,num1 ,@lista1)
+                        (if (equal? (length lista1) 1) `(,(caar lista1) ,num1 ,(cadar lista1))
                             ;Longer that 1:
-                            (loopPrint `(/ ,num1 ,(cadar lista1)) (cdr lista1)))))))
-                              (loopPrint num2 lista)
-                            )))
-    (*parser <EmptyParser>)
-    (*caten 3)
-    (*pack-with (lambda (space1 expression space2)
-            expression))
-    done))
-
-(define <InfixMul>
-    (new
-    (*parser <EmptyParser>)
-
-    (*parser <InfixPow>)
-    (*parser <EmptyParser>)
-    (*parser (char #\*))
-    (*parser <EmptyParser>)
-    (*parser <InfixPow>)
-    (*parser <EmptyParser>)
-
-    (*caten 5) ;(Sign + number remain)
-    (*pack-with
-        (lambda (space mul space2 num2 space3)
-           num2))
-    *star ;( (Sign+number)*)
-    (*caten 2) ;(number (Sign+number)*)
-    
-    (*pack-with (lambda (num2 lista)
-        (display "Mul\n")
-                  (letrec 
-                    ((loopPrint
-                      (lambda (num1 lista1)
-                        (if (equal? (length lista1) 0) num1
-                        (if (equal? (length lista1) 1) `(* ,num1 ,@lista1)
-                            ;Longer that 1:
-                            (loopPrint `(* ,num1 ,(cadar lista1)) (cdr lista1)))))))
+                            (loopPrint `(,(caar lista1) ,num1 ,(cadar lista1)) (cdr lista1)))))))
                               (loopPrint num2 lista)
                             )))
     (*parser <EmptyParser>)
@@ -596,9 +564,8 @@
     (new
     (*parser <EmptyParser>)
     
-    (*parser <InfixMul>)
-    (*parser <InfixDiv>)
-    (*disj 2)
+    (*parser <InfixMulOrDiv>)
+
         
     (*parser <EmptyParser>)
     (*parser (word "+"))
@@ -606,9 +573,8 @@
     (*disj 2)
 
     (*parser <EmptyParser>)
-    (*parser <InfixMul>)
-    (*parser <InfixDiv>)
-    (*disj 2)
+    (*parser <InfixMulOrDiv>)
+
     (*parser <EmptyParser>)
 
     (*caten 5)
