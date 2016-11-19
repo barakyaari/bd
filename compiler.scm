@@ -292,7 +292,140 @@
     (*pack (lambda(_)
                   (string->symbol
                     (list->string _))))
-    
+    done))
+
+;; --------------------------------
+;;           Lists:
+;; --------------------------------
+
+(define <ProperList>
+  (new 
+    (*parser (char #\())
+    (*parser <EmptyParser>)
+    (*delayed (lambda () <sexpr>))
+    *star
+    (*parser (char #\)))
+    (*caten 4)
+    (*pack-with
+      (lambda(open emptyparser expr1 close)
+        (display 'properList)
+        `(,@expr1 )))
+    done))
+
+(define <ImproperList>
+  (new 
+        (*parser (char #\())
+        (*delayed (lambda () <sexpr>))
+         *plus
+
+        (*parser (char #\.))
+        (*delayed (lambda () <sexpr>))
+        (*parser (char #\)))
+        (*caten 5)
+        (*pack-with
+          (lambda(open expr1 point expr2 close)
+            (display 'improperList)
+          `(,@expr1  . ,expr2 )))
+
+       done))
+
+
+
+(define <Vector>
+  (new 
+    (*parser (char #\#))
+    (*parser (char #\())
+    (*delayed (lambda () <sexpr>))
+    *star
+             
+    (*parser (char #\)))
+    (*caten 4)
+    (*pack-with
+      (lambda (a b lista d)
+        (list->vector lista )))
+    done))
+
+(define <Quoted>
+  (new 
+    (*parser (char #\'))
+    (*delayed (lambda () <sexpr>))
+    (*caten 2)
+    (*pack-with
+      (lambda(sign e)
+        `(,'quote ,@e)))
+    done))
+
+(define <QuasiQuoted>
+  (new 
+    (*parser (char #\`))
+    (*delayed (lambda () <sexpr>))
+    (*caten 2)
+    (*pack-with
+      (lambda(sign e)
+        `(,'quasiquote ,@e)))
+    done))
+
+(define <Unquoted>
+  (new 
+    (*parser (char #\,))
+    (*delayed (lambda () <sexpr>))
+    (*caten 2)
+    (*pack-with
+      (lambda(sign e)
+        `(,'unquote ,@e)))
+    done))
+
+(define <UnquoteAndSpliced>
+  (new 
+    (*parser (char #\,))
+    (*parser (char #\@))
+    (*delayed (lambda () <sexpr>))
+    (*caten 3)
+    (*pack-with
+      (lambda(sign strudel e)
+        (list 'unquote-splicing e)))
+    done))
+
+;; --------------------------------
+;;           Infix:
+;; --------------------------------
+
+(define <PowerSymbol>
+    (new
+    (*parser (word "**"))
+    (*parser (char #\^))
+    (*disj 2)
+    done))
+
+(define <InfixPow>
+    (new
+    (*parser <PowerSymbol>)
+    done))
+
+(define <InfixExpression>
+    (new
+    (*parser <InfixPow>)
+
+    done))
+
+(define <InfixPrefixExtensionPrefix>
+  (new 
+    (*parser <EmptyParser>)
+    (*parser (word "##"))
+    (*parser (word "#%"))
+    (*disj 2)
+    (*parser <EmptyParser>)
+    (*caten 3)
+    done))
+
+(define <InfixExtension>
+  (new 
+    (*parser <InfixPrefixExtensionPrefix>) 
+    (*parser <InfixExpression>)
+    (*caten 2) 
+    (*pack-with (lambda (prefix expre)
+    (display "Infix Extention\n")
+                  expre))
     done))
 
 ; ====================================================
@@ -306,20 +439,16 @@
     (*parser <Number>)
     (*parser <String>)
     (*parser <Symbol>)
-    (*delayed (lambda () <ProperList>))
-    (*delayed (lambda () <ImproperList>))
-    (*delayed (lambda () <Vector>))
-    (*delayed (lambda () <Quoted>))
-    (*delayed (lambda () <QuasiQuoted>))
-    (*delayed (lambda () <UnquoteAndSpliced>))
-    (*delayed (lambda () <Unquoted>))
-    (*delayed (lambda () <InfixExtension>))
-
-    
-    (*disj 13) 
-    
+    (*parser <ProperList>)
+    (*parser <ImproperList>)
+    (*parser <Vector>)
+    (*parser <Quoted>)
+    (*parser <QuasiQuoted>)
+    (*parser <UnquoteAndSpliced>)
+    (*parser <Unquoted>)
+    (*parser <InfixExtension>)
+    (*disj 13)     
     (*parser <EmptyParser>)
-    
     (*caten 3)
     (*pack-with
       (lambda (space expr space2)
@@ -327,173 +456,3 @@
     done))
 ; ====================================================
 ; ====================================================
-
-
-
-
-
-
-
-
-
-
-
-
-
-(define <ProperList>
-  (new 
-    (*parser (char #\())
-             (*parser <EmptyParser>)
-             (*parser <sexpr>)*star
-             (*parser (char #\)))
-    (*caten 4)
-    (*pack-with
-      (lambda(open emptyparser expr1 close)
-        (display 'properList)
-        `(,@expr1 )))
-    done))
-
-(define <ImproperList>
-  (new 
-        (*parser (char #\())
-        (*parser <sexpr>) *plus
-
-        (*parser (char #\.))
-        (*parser <sexpr>)
-        (*parser (char #\)))
-        (*caten 5)
-        (*pack-with
-          (lambda(open expr1 point expr2 close)
-            (display 'improperList)
-          `(,@expr1  . ,expr2 )))
-
-       done))
-
-(define <Vector>
-  (new 
-    (*parser (char #\#))
-    (*parser (char #\())
-    (*parser <sexpr>) *star
-             
-    (*parser (char #\)))
-    (*caten 4)
-    (*pack-with
-      (lambda (a b lista d)
-        (list->vector lista )))
-    done))
-
-(define <Quoted>
-  (new 
-    (*parser (char #\'))
-    (*parser <sexpr>)
-    (*caten 2)
-    (*pack-with
-      (lambda(sign e)
-        `(,'quote ,@e)))
-    done))
-
-(define <QuasiQuoted>
-  (new 
-    (*parser (char #\`))
-    (*parser <sexpr>)
-    (*caten 2)
-    (*pack-with
-      (lambda(sign e)
-        `(,'quasiquote ,@e)))
-    done))
-
-(define <Unquoted>
-  (new 
-    (*parser (char #\,))
-    (*parser <sexpr>)
-    (*caten 2)
-    (*pack-with
-      (lambda(sign e)
-        `(,'unquote ,@e)))
-    done))
-
-(define <UnquoteAndSpliced>
-  (new 
-    (*parser (char #\,))
-    (*parser (char #\@))
-    (*parser <sexpr>)
-    (*caten 3)
-    (*pack-with
-      (lambda(sign strudel e)
-        (list 'unquote-splicing e)))
-    done))
-
-;; --------------------------------
-;;           Infix:
-;; --------------------------------
-
-(define <InfixExpression>
-
-    (new
-    (*delayed (lambda () <InfixAdd>))
-    (*delayed (lambda () <InfixParen>))
-    (*parser <Number>)
-    
-    (*disj 3)
-    (*pack
-      (lambda(_)
-        (display "InfixExpression\n")
-           _))
-    done))
-
-
-(define <InfixPrefixExtensionPrefix>
-  (new 
-    (*parser <EmptyParser>)
-    (*parser (word "##"))
-    (*parser (word "#%"))
-    (*disj 2)
-    (*parser <EmptyParser>)
-    (*caten 3)
-    done))
-
-
-
-(define <InfixParen>
-  (new 
-    (*parser (char #\())
-    (*parser <InfixExpression>) 
-    (*parser (char #\))) 
-    (*caten 3)
-    (*pack-with 
-      (lambda(open add close)
-         (display "Infix Paren\n")
-        `(,@add)))
-    done))
-
-
-
-
-(define <InfixAdd>
-  (new 
-    (*parser <EmptyParser>)
-    (*parser <Number>)
-    
-    (*parser <EmptyParser>)
-    (*parser (char #\+))
-    (*parser <EmptyParser>)
-    (*parser <InfixExpression>)
-
-    (*parser <EmptyParser>)
-    
-    (*caten 7)
-    (*pack-with (lambda (space1 infix1 space2 plus space3 infix2 space4)
-                  (display "Infix Add\n")
-                  `(+ ,infix1 ,infix2)))
-    done))
-
-
-(define <InfixExtension>
-  (new 
-    (*parser <InfixPrefixExtensionPrefix>) 
-    (*parser <InfixExpression>)
-    (*caten 2) 
-    (*pack-with (lambda (prefix expre)
-    (display "Infix Extention\n")
-                  expre))
-    done))

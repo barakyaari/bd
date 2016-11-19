@@ -1,6 +1,6 @@
 (load "compiler.scm")
 (display "Test starting:\n")
-(define test "##1+2+3+4")
+(define test "##2**3")
 (test-string <sexpr> test)
 
 
@@ -8,3 +8,4 @@
 (load "parser.so")
 
 (test-string <sexpr> test)
+
