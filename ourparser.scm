@@ -1,6 +1,6 @@
 (load "compiler.scm")
 (display "Test starting:\n")
-(define test "##<")
+(define test "##1+2")
 (test-string <InfixSymbol> test)
 
 

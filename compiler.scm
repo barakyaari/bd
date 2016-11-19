@@ -384,7 +384,7 @@
 ;;           Infix:
 ;; --------------------------------
 
-(define <Infix SymbolChar>
+(define <InfixSymbolChar>
   (new 
     
     (*parser (range #\0 #\9))
@@ -395,13 +395,13 @@
     (*parser (char #\<))
     (*parser (char #\>))
     (*parser (char #\?))
-    (*disj 13)
+    (*disj 8)
     
     done))
 
 (define <InfixSymbol>
   (new 
-    (*parser <SymbolChar>) *plus
+    (*parser <InfixSymbolChar>) *plus
     (*pack (lambda(_)
                   (string->symbol
                     (list->string _))))
@@ -566,10 +566,27 @@
                             )))
     done))
 
-(define <InfixExpression>
-    (new
+(define <InfixFuncall>
+  (new
+     
+    (*parser <EmptyParser>)
     (*parser <InfixAdd>)
-    done))
+    (*parser <InfixSub>)
+    (*disj 2)
+    (*parser <EmptyParser>)
+    (*caten 3)
+    (*pack-with (lambda (space1 addorsub space2)
+                  addorsub))
+    (*parser (char #\())
+    (*parser <EmptyParser>)
+    (*parser <InfixArgList>)
+    (*parser <EmptyParser>)
+    (*parser (char #\))
+    (*parser <EmptyParser>)
+    (*caten 3)
+    (*pack-with (lambda (open space1 arglist space2 close space3)
+                  addorsub))
+        done))
 
 (define <InfixPrefixExtensionPrefix>
   (new 
@@ -580,6 +597,35 @@
     (*parser <EmptyParser>)
     (*caten 3)
     done))
+
+(define <InfixSexprEscape>
+    (new
+    (*parser <EmptyParser>)
+    (*parser <InfixPrefixExtensionPrefix>)
+    (*parser <EmptyParser>)
+    (*delayed (lambda () <sexpr>))
+    (*parser <EmptyParser>)
+    (*caten 5)
+    (*pack-with 
+      (lambda (space pre space2 sexpr space3)
+          sexpr))
+    done))
+
+(define <InfixExpression>
+    (new
+      (*parser <EmptyParser>)
+      (*parser <InfixNeg>)
+      (*parser <InfixSexprEscape>)
+      (*parser <InfixFuncall>)
+      (*parser <InfixAdd>)
+      (*parser <InfixSub>)
+      (*disj 5)
+      (*parser <EmptyParser>)
+
+      (*caten 3)
+      (*pack-with (lambda (space expression space2)
+                    expression ))
+      done))
 
 (define <InfixExtension>
   (new 
