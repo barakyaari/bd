@@ -390,6 +390,36 @@
 ;;           Infix:
 ;; --------------------------------
 
+(define <InfixAdd>
+    (new
+    (*parser <Number>)
+    
+    (*parser <EmptyParser>)
+    (*parser (char #\+))
+    (*parser <EmptyParser>)
+    (*parser <Number>)
+    (*parser <EmptyParser>)
+
+    (*caten 5) ;(Power + number remain)
+    (*pack-with
+        (lambda (space add space2 num2 space3)
+           num2))
+    *star ;( (power+number)*)
+    (*caten 2) ;(number (power+number)*)
+    
+    (*pack-with (lambda (num2 lista)
+        (display "Add\n")
+                  (letrec 
+                    ((loopPrint
+                      (lambda (num1 lista1)
+                        (if (equal? (length lista1) 0) num1
+                        (if (equal? (length lista1) 1) `(+ ,num1 ,@lista1)
+                            ;Longer that 1:
+                            (loopPrint `(+ ,num1 ,(car lista1)) (cdr lista1)))))))
+                              (loopPrint num2 lista)
+                            )))
+    done))
+
 (define <PowerSymbol>
     (new
     (*parser (word "**"))
@@ -419,15 +449,9 @@
                   (letrec 
                     ((loopPrint
                       (lambda (num1 lista1)
-                        ;Only number -> return it:
-                        (if (equal? 0 (length lista1))
-                          num1
-                          ;Number [Sign] Number:
-                           (if (equal? 1 (length lista1))
-                          `(expt ,num1 ,@lista1)
-                        ;Muliple instances of: [Sign] [Number]:  
+                        (if (equal? (length lista1) 0) num1
+                        (if (equal? (length lista1) 1) `(expt ,num1 ,@lista1)
                         (if (equal? (length lista1) 2)
-                            ;length of 2:
                             `(expt ,num1 (expt ,(car lista1) ,(cadr lista1)))
                             ;Longer that 2:
                             `(expt ,num1 ,(loopPrint (car lista1) (cdr lista1)))))))))
