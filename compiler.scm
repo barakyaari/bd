@@ -424,17 +424,18 @@
 
 (define <InfixParen>
     (new
+    (*parser <EmptyParser>)
     (*parser (char #\())
     (*parser <EmptyParser>)
     (*delayed (lambda () <InfixAddOrSub>))
-
     (*parser <EmptyParser>)
     (*parser (char #\)))
-    (*caten 5)
+    (*parser <EmptyParser>)
+    (*caten 7)
     
     (*pack-with
-        (lambda (open space1 expression space2 close)
-           `(- ,expression)))
+        (lambda (space open space1 expression space2 close space3)
+           expression))
     done))
 
 (define <PowerSymbol>
@@ -550,7 +551,7 @@
     (*caten 2) ;(number (Sign+number)*)
     
     (*pack-with (lambda (num2 lista)
-        (display "Div\n")
+        (display "MulOrDiv\n")
                   (letrec 
                     ((loopPrint
                       (lambda (num1 lista1)
@@ -620,6 +621,7 @@
     
     (*pack-with
         (lambda (space minus space2 expression)
+          (display "InfixNeg\n")
            `(- ,expression)))
     done))
 
