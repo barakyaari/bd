@@ -396,13 +396,14 @@
     (*parser (char #\>))
     (*parser (char #\?))
     (*disj 8)
-    
+
     done))
 
 (define <InfixSymbol>
   (new 
     (*parser <InfixSymbolChar>) *plus
     (*pack (lambda(_)
+      (display "InfixSymbol\n")
                   (string->symbol
                     (list->string _))))
     done))
@@ -411,19 +412,15 @@
   (new
     (*parser <EmptyParser>) 
     
-    ;Number or any Infix symbol:
     (*parser <Number>)
     (*parser <InfixSymbol>)
-    *star
-    (*pack 
-      (lambda(infixSymbol)
-       (string->symbol (list->string infixSymbol))))
     (*disj 2)
     
     (*parser <EmptyParser>)
     
     (*caten 3)
     (*pack-with (lambda (space1 expression space2)
+      (display "InfixFinal\n")
       expression))
     done))
 
@@ -493,19 +490,25 @@
 
 (define <InfixPow>
     (new
-    (*parser <Number>)
+    (*parser <EmptyParser>)
+
+    (*parser <InfixParen>)
+    (*parser <InfixArrayGet>)
+    (*disj 2)
     (*parser <EmptyParser>)
     (*parser <PowerSymbol>)
     (*parser <EmptyParser>)
-    (*parser <Number>)
+    (*parser <InfixParen>)
+    (*parser <InfixArrayGet>)
+    (*disj 2)
     (*parser <EmptyParser>)
 
     (*caten 5) ;(Power + number remain)
     (*pack-with
         (lambda (space pow space2 num2 space3)
            num2))
-    *star ;( (power+number)*)
-    (*caten 2) ;(number (power+number)*)
+    *star ;( (power+rest)*)
+    (*caten 2) ;(number (power+rest)*)
     
     (*pack-with (lambda (num2 lista)
         (display "power\n")
@@ -520,6 +523,11 @@
                             `(expt ,num1 ,(loopPrint (car lista1) (cdr lista1)))))))))
                               (loopPrint num2 lista)
                             )))
+    (*parser <EmptyParser>)
+    (*caten 3)
+    (*pack-with 
+      (lambda (space1 expression space2)
+        expression))
     done))
 
 (define <InfixMulOrDiv>
