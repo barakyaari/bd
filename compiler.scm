@@ -323,8 +323,6 @@
 
        done))
 
-
-
 (define <Vector>
   (new 
     (*parser (char #\#))
@@ -715,8 +713,6 @@
       (*parser <InfixFuncall>)
       (*parser <InfixAddOrSub>)
 
-      ;(*parser <InfixArrayGet>)
-
       (*disj 4)
       (*parser <EmptyParser>)
 
@@ -762,5 +758,7 @@
       (lambda (space expr space2)
         expr))
     done))
+
+(define <Sexpr> <sexpr>)
 ; ====================================================
 ; ====================================================
