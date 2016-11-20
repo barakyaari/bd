@@ -179,11 +179,6 @@
     (*parser <Fraction>)
     (*parser <Integer>)
     (*disj 2)
-    (*pack(lambda(_)
-            (display "Number: ")
-            (display _)
-            (display "\n")
-             _))
     done))
 
 ;; --------------------------------
@@ -302,7 +297,6 @@
     (*caten 4)
     (*pack-with
       (lambda(open emptyparser expr1 close)
-        (display 'properList)
         `(,@expr1 )))
     done))
 
@@ -318,7 +312,6 @@
         (*caten 5)
         (*pack-with
           (lambda(open expr1 point expr2 close)
-            (display 'improperList)
           `(,@expr1  . ,expr2 )))
 
        done))
@@ -401,8 +394,7 @@
   (new 
     (*parser <InfixSymbolChar>) *plus
     (*pack (lambda(_)
-      (display "InfixSymbol\n")
-                  (string->symbol
+           (string->symbol
                     (list->string _))))
     done))
 
@@ -418,7 +410,6 @@
     
     (*caten 3)
     (*pack-with (lambda (space1 expression space2)
-      (display "InfixFinal\n")
       expression))
     done))
 
@@ -468,7 +459,6 @@
     *star
     (*caten 2)
     (*pack-with (lambda (array lista)
-        (display "power\n")
                   (letrec 
                     ((loopPrint
                       (lambda (num1 lista1)
@@ -510,7 +500,6 @@
     (*caten 2) ;(number (power+rest)*)
     
     (*pack-with (lambda (num2 lista)
-        (display "power\n")
                   (letrec 
                     ((loopPrint
                       (lambda (num1 lista1)
@@ -551,7 +540,6 @@
     (*caten 2) ;(number (Sign+number)*)
     
     (*pack-with (lambda (num2 lista)
-        (display "MulOrDiv\n")
                   (letrec 
                     ((loopPrint
                       (lambda (num1 lista1)
@@ -593,7 +581,6 @@
     (*caten 2)
     
     (*pack-with (lambda (num2 lista)
-        (display "AddOrSub\n")
                   (letrec 
                     ((loopPrint
                       (lambda (num1 lista1)
@@ -621,7 +608,6 @@
     
     (*pack-with
         (lambda (space minus space2 expression)
-          (display "InfixNeg\n")
            `(- ,expression)))
     done))
 
@@ -720,7 +706,6 @@
 
       (*caten 3)
       (*pack-with (lambda (space expression space2)
-                    (display "InfixExpression\n")
                     expression ))
       done))
 
@@ -730,7 +715,6 @@
     (*parser <InfixExpression>)
     (*caten 2) 
     (*pack-with (lambda (prefix expre)
-    (display "Infix Extention\n")
                   expre))
     done))
 
