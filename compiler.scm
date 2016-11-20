@@ -1,5 +1,7 @@
 (load "pc.scm")
 
+(define <sexpr1> <sexpr>)
+
 (define <EmptyParser>
   (new (*parser (range 
                   (integer->char 1)
@@ -745,6 +747,5 @@
         expr))
     done))
 
-(define <my-sexpr> <sexpr>)
 ; ====================================================
 ; ====================================================

@@ -2,7 +2,7 @@
 (load "parser.so")
 (load "compiler.scm")
 
-(define <my-sexpr> <sexpr-2>) ; Change to your sexpr name
+(define <my-sexpr> <sexpr1>) ; Change to your sexpr name
 (define <staff-sexpr> <sexpr>)
 
 (define testVSstaff
@@ -13,10 +13,10 @@
 			(display ": ")			
 			(cond ((equal? my-res staff-res)
 				(display "\033[1;32mSuccess!\033[0m") (newline) #t)
-				(else (display "\033[1;31mFailed!\033[0m ") 
-					(display ", expected: ")					
+				(else (display "\033[1;31mFailed!\033[0m \n") 
+					(display "Expected: \n")					
 					(display staff-res)
-					(display ", actual:")
+					(display "\nActual:\n")
 					(display my-res)
 					(newline)
 					#f))
