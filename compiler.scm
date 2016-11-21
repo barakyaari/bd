@@ -109,8 +109,10 @@
     (*caten 2)
     (*pack-with
       (lambda(a b)
+        (display "String: ")
+        (display b)
+        (display "\n")
         b))
-    
     done))
 
 ;; --------------------------------
@@ -186,6 +188,12 @@
     (*parser <Fraction>)
     (*parser <Integer>)
     (*disj 2)
+        (*pack
+      (lambda(_)
+        (display "String: ")
+        (display _)
+        (display "\n")
+      _))
     done))
 
 ;; --------------------------------
@@ -222,7 +230,13 @@
     (*parser <HexChar>) *star
     (*caten 3)
     (*pack-with (lambda (slash x charlist)
-                  (integer->char
+        (display "StringHexChar: ")
+        (display (integer->char
+                    (string->number 
+                      (list->string charlist) 16)))
+        (display "\n")
+
+                (integer->char
                     (string->number 
                       (list->string charlist) 16))))
     
@@ -235,7 +249,6 @@
     (*parser <StringMetaChar>)
     (*parser <StringVisibleChar>)
     (*parser <StringHexChar>)
-    
     (*disj 3)
     done))
 
@@ -255,6 +268,11 @@
     
     (*pack-with
       (lambda(intro word outro)
+        (display "String: ")
+        (display word)
+        (display "\n")
+
+
         (list->string word)))
     done))
 

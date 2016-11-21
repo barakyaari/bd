@@ -3,7 +3,8 @@
 
 (display "Test starting:\n")
 
-(define test "abc")
+;(define test "0123456789abcdeABCDE!$^*-_=+<>?/")
+(define test "3!")
 
 (test-string <sexpr1> test)
 
