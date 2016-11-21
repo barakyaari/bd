@@ -1,7 +1,9 @@
 (load "compiler.scm")
 (display "Test starting:\n")
-(define test "##(2)")
-(test-string <sexpr> test)
+
+(define test "##-5+4")
+
+(test-string <sexpr1> test)
 
 
 (display "\n- ---  Meirs parser: ----\n\n")

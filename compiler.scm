@@ -1,6 +1,5 @@
 (load "pc.scm")
 
-(define <sexpr1> <sexpr>)
 
 (define <EmptyParser>
   (new (*parser (range 
@@ -565,8 +564,8 @@
 
         
     (*parser <EmptyParser>)
-    (*parser (word "+"))
     (*parser (word "-"))
+    (*parser (word "+"))
     (*disj 2)
 
     (*parser <EmptyParser>)
@@ -746,6 +745,8 @@
       (lambda (space expr space2)
         expr))
     done))
+
+(define <sexpr1> <sexpr>)
 
 ; ====================================================
 ; ====================================================
