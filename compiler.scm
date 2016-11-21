@@ -9,6 +9,58 @@
        *star
        done))
 
+;; --------------------------------
+;;           Comments:
+;; --------------------------------
+
+(define <whitespace>
+  (const
+   (lambda (ch)
+     (char<=? ch #\space))))
+
+(define <line-comment>
+  (let ((<end-of-line-comment>
+   (new (*parser (char #\newline))
+        (*parser <end-of-input>)
+        (*disj 2)
+        done)))
+    (new (*parser (char #\;))
+   
+   (*parser <any-char>)
+   (*parser <end-of-line-comment>)
+   *diff *star
+
+   (*parser <end-of-line-comment>)
+   (*caten 3)
+   done)))
+
+(define <sexpr-comment>
+  (new (*parser (word "#;"))
+       (*delayed (lambda () <sexpr>))
+       (*caten 2)
+       done))
+
+(define <comment>
+  (disj <line-comment>
+  <sexpr-comment>))
+
+(define <skip>
+  (disj <comment>
+  <whitespace>))
+
+(define ^^<wrapped>
+  (lambda (<wrapper>)
+    (lambda (<p>)
+      (new (*parser <wrapper>)
+     (*parser <p>)
+     (*parser <wrapper>)
+     (*caten 3)
+     (*pack-with
+      (lambda (_left e _right) e))
+     done))))
+
+(define ^<skipped*> (^^<wrapped> (star <skip>)))
+
 
 ;; --------------------------------
 ;;           Boolean:
@@ -847,6 +899,7 @@
 (define <sexpr1> <sexpr>)
 
 (define <sexpr>
+  (^<skipped*>
   (new 
     (*parser <EmptyParser>)
     (*parser <Boolean>)
@@ -868,7 +921,7 @@
     (*pack-with
       (lambda (space expr space2)
         expr))
-    done))
+    done)))
 
 
 
