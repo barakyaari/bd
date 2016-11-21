@@ -146,18 +146,24 @@
     done))
 
 (define <Integer>
-  (new (*parser (char #\+))
-       (*parser <Natural>)
-       (*caten 2)
-       (*pack-with
-         (lambda (++ n) n))
-       
+  (new 
        (*parser (char #\-))
+       (*parser <EmptyParser>)
        (*parser <Natural>)
-       (*caten 2)
+       (*caten 3)
        (*pack-with
-         (lambda (-- n) (- n)))
-       
+
+         (lambda (minus space n) 
+            (- n)))
+
+    (*parser (char #\+))
+       (*parser <EmptyParser>)
+       (*parser <Natural>)
+       (*caten 3)
+       (*pack-with
+         (lambda (plus space n)
+          n))
+    
        (*parser <Natural>)
        
        (*disj 3)
@@ -395,6 +401,9 @@
   (new 
     (*parser <InfixSymbolChar>) *plus
     (*pack (lambda(_)
+        (display "InfixSymbol: ")
+        (display _)
+        (display "\n")
            (string->symbol
                     (list->string _))))
     done))
@@ -411,6 +420,9 @@
     
     (*caten 3)
     (*pack-with (lambda (space1 expression space2)
+        (display "InfixFinal: ")
+        (display expression)
+        (display "\n")
       expression))
     done))
 
@@ -427,6 +439,9 @@
     
     (*pack-with
         (lambda (space open space1 expression space2 close space3)
+        (display "InfixParen: ")
+        (display expression)
+        (display "\n")
            expression))
     done))
 
@@ -474,6 +489,9 @@
     (*parser <EmptyParser>)
     (*caten 3)
     (*pack-with (lambda (space expression space2)
+        (display "ArrayGet: ")
+        (display expression)
+        (display "\n")
                   expression))
     done))
         
@@ -516,6 +534,9 @@
     (*caten 3)
     (*pack-with 
       (lambda (space1 expression space2)
+        (display "Power: ")
+        (display expression)
+        (display "\n")
         expression))
     done))
 
@@ -553,6 +574,9 @@
     (*parser <EmptyParser>)
     (*caten 3)
     (*pack-with (lambda (space1 expression space2)
+        (display "MulOrDiv: ")
+        (display expression)
+        (display "\n")
             expression))
     done))
 
@@ -596,6 +620,9 @@
 
     (*pack-with 
       (lambda (space1 expression space2)
+        (display "InfixAddOrSub: ")
+        (display expression)
+        (display "\n")
           expression))
     done))
 
@@ -609,6 +636,10 @@
     
     (*pack-with
         (lambda (space minus space2 expression)
+        (display "InfixNeg: ")
+        (display expression)
+        (display "\n")
+
            `(- ,expression)))
     done))
 
@@ -667,6 +698,9 @@
     (*caten 3)
     (*pack-with 
       (lambda (space1 functionOrExpression space2)
+        (display "InfixFuncall: ")
+        (display functionOrExpression)
+        (display "\n")
                   functionOrExpression))
         done))
 
@@ -691,6 +725,9 @@
     (*caten 5)
     (*pack-with 
       (lambda (space pre space2 sexpr space3)
+        (display "InfixSexprEscape: ")
+        (display sexpr)
+        (display "\n")
           sexpr))
     done))
 
@@ -707,6 +744,9 @@
 
       (*caten 3)
       (*pack-with (lambda (space expression space2)
+        (display "InfixExpression: ")
+        (display expression)
+        (display "\n")
                     expression ))
       done))
 
