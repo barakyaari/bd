@@ -5,7 +5,7 @@
 (display "Expression tested:\n")
 
 ;(define test "0123456789abcdeABCDE!$^*-_=+<>?/")
-(define test  "!")
+(define test  "#% (1+2)*3")
 (display test)
 (display "\n")
 (test-string <sexpr> test)
