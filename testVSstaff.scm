@@ -2,12 +2,11 @@
 (load "parser.so")
 (load "compiler.scm")
 
-(define <my-sexpr> <sexpr1>) ; Change to your sexpr name
 (define <staff-sexpr> <sexpr>)
 
 (define testVSstaff
 	(lambda (input)
-		(let ((my-res (test-string <my-sexpr> input))
+		(let ((my-res (test-string <sexpr1> input))
 		      (staff-res (test-string <staff-sexpr> input)))
 			(display input)
 			(display ": ")			
