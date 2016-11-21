@@ -47,12 +47,19 @@
     (*caten 2)
     (*pack-with
       (lambda(a b)
+        (display "CharPrefix: ")
+        (display "\n")
         `(#\#  #\\)))
     done))
 
 (define <VisibleSimpleChar>
   (new 
   	 (*parser (range #\! #\~))
+     (*pack (lambda(_)
+        (display "VisibleSimpleChar: ")
+        (display _)
+        (display "\n")
+      _))
     done))
 
 (define <NamedChar>
@@ -79,6 +86,11 @@
     (*pack (lambda (_) (integer->char 9)))
     
     (*disj 7)
+         (*pack (lambda(_)
+        (display "NamedChar: ")
+        (display _)
+        (display "\n")
+      _))
     done))
 
 (define <HexChar>
@@ -86,6 +98,11 @@
     (*parser (range #\0 #\9))
     (*parser (range-ci #\a #\f))
     (*disj 2)
+     (*pack (lambda(_)
+        (display "HexChar: ")
+        (display _)
+        (display "\n")
+      _))
     done))
 
 (define <HexUnicodeChar>
@@ -94,6 +111,10 @@
     (*parser <HexChar>) *plus
     (*caten 2)
     (*pack-with (lambda(x lista)
+
+        (display "VisibleSimpleChar: ")
+        (display lista)
+        (display "\n")
                   (integer->char
                     (string->number 
                       (list->string lista) 16))))
@@ -109,7 +130,7 @@
     (*caten 2)
     (*pack-with
       (lambda(a b)
-        (display "String: ")
+        (display "Char: ")
         (display b)
         (display "\n")
         b))
@@ -121,6 +142,7 @@
 
 (define <digit-0-9>
   (range #\0 #\9))
+
 
 (define <digit-1-9>
   (range #\1 #\9))
@@ -144,6 +166,10 @@
     (*caten 2)
     (*pack-with
       (lambda (leadingzeros number)
+        (display "Natural: ")
+        (display number)
+        (display "\n")
+
         number))
     done))
 
@@ -169,6 +195,11 @@
        (*parser <Natural>)
        
        (*disj 3)
+    (*pack (lambda(_)
+        (display "Integer: ")
+        (display _)
+        (display "\n")
+      _))
        
        done))
 
@@ -180,6 +211,9 @@
        (*caten 3)
        (*pack-with
          (lambda (num div den)
+        (display "Fraction: ")
+        (display number)
+        (display "\n")
            (/ num den)))
        done))
 
@@ -190,7 +224,7 @@
     (*disj 2)
         (*pack
       (lambda(_)
-        (display "String: ")
+        (display "Number: ")
         (display _)
         (display "\n")
       _))
@@ -220,7 +254,11 @@
     (*parser (word "\r"))
     (*pack (lambda(_) #\return))
     (*disj 6)
-    
+    (*pack (lambda(_)
+          (display "StringMetaChar: ")
+        (display _)
+        (display "\n")
+        _))
     done))
 
 (define <StringHexChar>
@@ -250,6 +288,10 @@
     (*parser <StringVisibleChar>)
     (*parser <StringHexChar>)
     (*disj 3)
+    (*pack (lambda(_)
+          (display "StringChar: ")
+        (display _)
+        _))
     done))
 
 
@@ -297,6 +339,11 @@
     (*parser (char #\?))
     (*parser (char #\/))
     (*disj 13)
+    (*pack (lambda(_)
+          (display "SymbolChar: ")
+        (display _)
+        (display "\n")
+        _))
     
     done))
 
@@ -304,6 +351,9 @@
   (new 
     (*parser <SymbolChar>) *plus
     (*pack (lambda(_)
+          (display "Symbol: ")
+        (display _)
+        (display "\n")
                   (string->symbol
                     (list->string _))))
     done))
@@ -322,6 +372,7 @@
     (*caten 4)
     (*pack-with
       (lambda(open emptyparser expr1 close)
+       (display "ProperList\n")
         `(,@expr1 )))
     done))
 
@@ -337,6 +388,8 @@
         (*caten 5)
         (*pack-with
           (lambda(open expr1 point expr2 close)
+           (display "ImproperList\n")
+
           `(,@expr1  . ,expr2 )))
 
        done))
@@ -352,6 +405,8 @@
     (*caten 4)
     (*pack-with
       (lambda (a b lista d)
+             (display "Vector\n")
+
         (list->vector lista )))
     done))
 
@@ -362,6 +417,8 @@
     (*caten 2)
     (*pack-with
       (lambda(sign e)
+           (display "Quoted\n")
+
         `(,'quote ,@e)))
     done))
 
@@ -372,6 +429,8 @@
     (*caten 2)
     (*pack-with
       (lambda(sign e)
+               (display "Quasi\n")
+
         `(,'quasiquote ,@e)))
     done))
 
@@ -382,6 +441,7 @@
     (*caten 2)
     (*pack-with
       (lambda(sign e)
+               (display "Unquoted\n")
         `(,'unquote ,@e)))
     done))
 
@@ -393,6 +453,7 @@
     (*caten 3)
     (*pack-with
       (lambda(sign strudel e)
+        (display "UnquotedAndSpliced\n")
         (list 'unquote-splicing e)))
     done))
 
@@ -412,7 +473,11 @@
     (*parser (char #\>))
     (*parser (char #\?))
     (*disj 8)
-
+    (*pack (lambda(_)
+          (display "InfixSymbolChar: ")
+        (display _)
+        (display "\n")
+      _))
     done))
 
 (define <InfixSymbol>
@@ -693,8 +758,6 @@
   (new
      
     (*parser <EmptyParser>)
-    
-    
     (*parser <InfixAddOrSub>)
 
     (*parser <EmptyParser>)
