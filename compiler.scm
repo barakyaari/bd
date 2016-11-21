@@ -288,6 +288,8 @@
     (*parser <Fraction>)
     (*parser <Integer>)
     (*disj 2)
+    (*delayed (lambda () <SymbolChar>))
+    *not-followed-by 
         (*pack
       (lambda(_)
         (display "Number: ")
@@ -399,6 +401,8 @@
     (*parser (range #\0 #\9))
     (*parser (range #\a #\z))
     (*parser (range #\A #\Z))
+    (*pack (lambda (capital)
+        (integer->char  (+ (char->integer capital) 32))))
     (*parser (char #\^))
     (*parser (char #\*))
     (*parser (char #\-))
