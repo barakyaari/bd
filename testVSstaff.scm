@@ -13,9 +13,9 @@
 			(cond ((equal? my-res staff-res)
 				(display "\033[1;32mSuccess!\033[0m") (newline) #t)
 				(else (display "\033[1;31mFailed!\033[0m \n") 
-					(display "Expected: \n")					
+					(display "OurResult: \n")					
 					(display staff-res)
-					(display "\nActual:\n")
+					(display "\nExpected:\n")
 					(display my-res)
 					(newline)
 					#f))
@@ -55,7 +55,7 @@
 	(list	"#\\a" "#\\B" "#\\9" "#\\space" "#\\lambda"
 		"#\\newline" "#\\nul" "#\\page"
 		"#\\return" "#\\tab" "#\\x41" "#\\x23" "#\\x20" "  #\\xab   "
-		"#\\x0" "#\\x110000"
+		"#\\x0"
 	  ))
 	  
 (define stringTests
@@ -64,7 +64,7 @@
 	  "\"\\n\"" "\"\\r\"" "\"\\x09af;\"" "\"\\x41;\""
 	  "\" 4 1;\"" "    \"  Akuna Matata  \"    "
 	  "\"\\x0;\""
-	  "\"\\x110000;\"" 
+	 
 	  "\"\\x40; ABC \\t \\\" \" "
 	  ))
 
