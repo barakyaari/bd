@@ -623,22 +623,37 @@
                   expression))
     done))
         
-
+(define <InfixNonArithmetics>
+  (new
+        (*parser <InfixArrayGet>)
+    (*parser <InfixParen>)
+    (*delayed (lambda () <InfixFuncall>))
+    (*disj 3)
+    done))
+        
 (define <InfixPow>
     (new
     (*parser <EmptyParser>)
+       
+            (*parser <InfixNonArithmetics>)
+        (*parser (word "-"))
+           (*parser <InfixNonArithmetics>)
+            (*caten 2)
+         (*pack-with (lambda (minus expression)
+            `(- ,expression)))
+        (*disj 2)
     
-    (*parser <InfixArrayGet>)
-    (*parser <InfixParen>)
-    (*delayed (lambda () <InfixFuncall>))
-    (*disj 3)
     (*parser <EmptyParser>)
     (*parser <PowerSymbol>)
     (*parser <EmptyParser>)
-    (*parser <InfixArrayGet>)
-    (*parser <InfixParen>)
-    (*delayed (lambda () <InfixFuncall>))
-    (*disj 3)
+       
+            (*parser <InfixNonArithmetics>)
+        (*parser (word "-"))
+           (*parser <InfixNonArithmetics>)
+            (*caten 2)
+         (*pack-with (lambda (minus expression)
+            `(- ,expression)))
+        (*disj 2)
     
     (*parser <EmptyParser>)
 
@@ -672,14 +687,25 @@
     (new
     (*parser <EmptyParser>)
 
-    (*parser <InfixPow>)
+        (*parser <InfixPow>)
+        (*parser (word "-"))
+           (*parser <InfixPow>)
+            (*caten 2)
+         (*pack-with (lambda (minus expression)
+            `(- ,expression)))
+        (*disj 2)
     (*parser <EmptyParser>)
     (*parser (word "*"))
     (*parser (word "/"))
     (*disj 2)
     (*parser <EmptyParser>)
-    (*parser <InfixPow>)
-    (*parser <EmptyParser>)
+        (*parser <InfixPow>)
+        (*parser (word "-"))
+           (*parser <InfixPow>)
+            (*caten 2)
+         (*pack-with (lambda (minus expression)
+            `(- ,expression)))
+        (*disj 2)    (*parser <EmptyParser>)
 
     (*caten 5) ;(Sign + number remain)
     (*pack-with

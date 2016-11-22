@@ -4,7 +4,7 @@
 (display "Test starting...\n")
 (display "Expression tested:\n")
 
-(define test  "##-a*-b")
+(define test  "##-func()^-func()b")
 
 (display test)
 (display "\n")
