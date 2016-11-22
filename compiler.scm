@@ -59,7 +59,7 @@
       (lambda (_left e _right) e))
      done))))
 
-(define ^<skipped*> (^^<wrapped> (star <skip>)))
+(define ^<CommentOutPrefix*> (^^<wrapped> (star <skip>)))
 
 
 ;; --------------------------------
@@ -950,7 +950,6 @@
     done))
 
 (define <InfixExpression>
-  (^<skipped*>
     (new
       (*parser <EmptyParser>)
       (*parser <InfixSexprEscape>)
@@ -965,7 +964,7 @@
         (display expression)
         (display "\n")
                     expression ))
-      done)))
+      done))
 
 (define <InfixExtension>
   (new 
@@ -983,7 +982,7 @@
 (define <sexpr1> <sexpr>)
 
 (define <sexpr>
-  (^<skipped*>
+  (^<CommentOutPrefix*>
   (new 
     (*parser <EmptyParser>)
     (*parser <Boolean>)
