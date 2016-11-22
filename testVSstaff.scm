@@ -12,7 +12,7 @@
 			(display ": ")			
 			(cond ((equal? my-res staff-res)
 				(display "\033[1;32mSuccess!\033[0m") (newline) #t)
-				(else (display "\033[1;31mFailed!\033[0m \n") 
+				(else (display "\033[1;31mFailed!\n\n\n ---------------------\n\033[0m \n") 
 					(display "OurResult: \n")					
 					(display staff-res)
 					(display "\nExpected:\n")
@@ -32,7 +32,7 @@
 	(let ((results (map testVSstaff lst)))
 	(cond ((andmap (lambda (exp) (equal? exp #t)) results)		
 		(display "\033[1;32mSUCCESS!\033[0m\n") (newline) #t)
-		(else (display "\033[1;31mFAILED!\033[0m\n") (newline) #f)))
+		(else (display "\033[1;31m\n ------------------- \n FAILED!\033[0m\n\n\n\n") (newline) #f)))
 ))
 
 (define runAllTests

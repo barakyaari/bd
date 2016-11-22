@@ -683,18 +683,22 @@
         ))
     *plus
     (*caten 2)
-    (*pack-with (lambda (array lista)
-                  (letrec 
-                    ((loopPrint
-                      (lambda (num1 lista1)
-                        (if (equal? (length lista1) 0) num1
-                        (if (equal? (length lista1) 1) `(vector-ref ,num1 ,@lista1)
-                        (if (equal? (length lista1) 2)
-                            `(vector-ref ,num1 (vector-ref ,(car lista1) ,(cadr lista1)))
-                            ;Longer that 2:
-                            `(vector-ref ,num1 ,(loopPrint (car lista1) (cdr lista1)))))))))
-                              (loopPrint array lista)
-                            )))
+       (*pack-with 
+         (lambda (array lista1)
+            (if (equal? 1 (length lista1))
+                 `(vector-ref ,array ,(car lista1))
+              (if (equal? 0 (length lista1))
+                  array
+                    (letrec 
+                      ((loopPrint
+                          (lambda (expression lista2)
+                            (if (equal? 1 (length lista2)) 
+                                `(vector-ref ,expression ,(car lista2))
+                                (loopPrint
+                                  `(vector-ref ,expression ,(car lista2)) (cdr lista2))
+                              ))))
+                      
+                    (loopPrint `(vector-ref ,array ,(car lista1)) (cdr lista1)))))))
     (*parser <EmptyParser>)
     (*caten 3)
     (*pack-with (lambda (space expression space2)

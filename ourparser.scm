@@ -14,7 +14,7 @@
 ;## #; 2+5 -b+7
 ;## ( #; 1+2 1+3)
 
-(define test  "##b[i][j]")
+(define test  "##?")
 (display test)
 (display "\n")
 (test-string <sexpr> test)
