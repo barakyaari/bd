@@ -241,6 +241,7 @@
        (*pack-with
 
          (lambda (minus space n) 
+           (display "got minus from integer\n")
             (- n)))
 
     (*parser (char #\+))
@@ -538,6 +539,21 @@
 ;;           Infix:
 ;; --------------------------------
 
+(define <InfixNumber>
+  (new 
+    (*parser <Fraction>)
+    (*parser <Integer>)
+    (*disj 2)
+    (*delayed (lambda () <InfixSymbolChar>))
+    *not-followed-by 
+        (*pack
+      (lambda(_)
+        (display "Number: ")
+        (display _)
+        (display "\n")
+      _))
+    done))
+
 (define <InfixSymbolChar>
   (new 
     
@@ -562,22 +578,50 @@
     done))
 
 (define <InfixSymbol>
-  (new 
+  (new
+    (*parser <InfixNumber>) 
     (*parser <InfixSymbolChar>) *plus
-    (*pack (lambda(_)
-        (display "InfixSymbol: ")
+    *not-followed-by
+    
+    (*parser <digit-0-9>) *star
+    (*parser <InfixSymbolChar>) *plus
+    (*parser <digit-0-9>) *star
+    (*caten 3)
+        (*pack-with 
+          (lambda (numbers1 chars numbers2)
+            `(,@numbers1
+              ,@chars
+               ,@numbers2)))
+        (*pack 
+          (lambda (_)
+            (string->symbol
+                    (list->string _))))        
+    (*disj 2)
+       (*pack 
+          (lambda (_)
+          (display "InfixSymbol: ")
         (display _)
         (display "\n")
-           (string->symbol
-                    (list->string _))))
+      _))
+
     done))
 
 (define <InfixFinal>
   (new
     (*parser <EmptyParser>) 
     
-    (*parser <Number>)
+    (*parser <InfixNumber>)
+    (*pack (lambda (_)
+             (display "got number: ")
+             (display _)
+             (display "\n")
+           _))
     (*parser <InfixSymbol>)
+    (*pack (lambda (_)
+             (display "got Symbol: ")
+             (display _)
+             (display "\n")
+           _))
     (*disj 2)
     
     (*parser <EmptyParser>)
@@ -620,23 +664,25 @@
     (new
     (*parser <EmptyParser>)
     (*parser <InfixFinal>)
+    (*parser (char #\())
+     *not-followed-by       
+    (*parser <InfixParen>)
+    (*disj 2)
+    
     (*parser <EmptyParser>)
     (*parser (char #\[))
+          
     (*parser <EmptyParser>)
-    
-    (*delayed (lambda () <InfixAddOrSub>))
-    
-    
+    (*delayed (lambda () <InfixExpression>))
     (*parser <EmptyParser>)
     (*parser (char #\]))
     (*parser <EmptyParser>)
-
     (*caten 7)
     (*pack-with
-      (lambda (space1 open space2 addOrSub space3 close space4)
-        addOrSub
+      (lambda (space1 open space2 Expression space3 close space4)
+        Expression
         ))
-    *star
+    *plus
     (*caten 2)
     (*pack-with (lambda (array lista)
                   (letrec 
@@ -663,16 +709,19 @@
 (define <InfixPow>
     (new
     (*parser <EmptyParser>)
-
-    (*parser <InfixParen>)
+    
     (*parser <InfixArrayGet>)
-    (*disj 2)
+    (*parser <InfixParen>)
+    (*delayed (lambda () <InfixFuncall>))
+    (*disj 3)
     (*parser <EmptyParser>)
     (*parser <PowerSymbol>)
     (*parser <EmptyParser>)
-    (*parser <InfixParen>)
     (*parser <InfixArrayGet>)
-    (*disj 2)
+    (*parser <InfixParen>)
+    (*delayed (lambda () <InfixFuncall>))
+    (*disj 3)
+    
     (*parser <EmptyParser>)
 
     (*caten 5) ;(Power + number remain)
@@ -749,6 +798,12 @@
     (*parser <EmptyParser>)
     
     (*parser <InfixMulOrDiv>)
+        (*parser (word "-"))
+           (*parser <InfixMulOrDiv>)
+            (*caten 2)
+         (*pack-with (lambda (minus expression)
+            `(- ,expression)))
+        (*disj 2)
 
         
     (*parser <EmptyParser>)
@@ -758,7 +813,12 @@
 
     (*parser <EmptyParser>)
     (*parser <InfixMulOrDiv>)
-
+        (*parser (word "-"))
+           (*parser <InfixMulOrDiv>)
+            (*caten 2)
+         (*pack-with (lambda (minus expression)
+            `(- ,expression)))
+        (*disj 2)
     (*parser <EmptyParser>)
 
     (*caten 5)
@@ -790,34 +850,15 @@
           expression))
     done))
 
-(define <InfixNeg>
-    (new
-    (*parser <EmptyParser>)
-    (*parser (char #\-))
-    (*parser <EmptyParser>)
-    (*delayed (lambda () <InfixExpression>))
-    (*caten 4)
-    
-    (*pack-with
-        (lambda (space minus space2 expression)
-        (display "1.InfixNeg: ")
-        (display expression)
-        (display "\n")
-
-           `(- ,expression)))
-    done))
-
 (define <InfixArgList>
   (new
      
     (*parser <EmptyParser>)
-    
-    (*parser <InfixAddOrSub>)
-    
+ (*delayed (lambda () <InfixExpression>))    
     (*parser <EmptyParser>)
     (*parser (char #\,))
     (*parser <EmptyParser>)
-    (*parser <InfixAddOrSub>)
+ (*delayed (lambda () <InfixExpression>))    
 
     (*parser <EmptyParser>)
     (*caten 5)
@@ -839,7 +880,7 @@
   (new
      
     (*parser <EmptyParser>)
-    (*parser <InfixAddOrSub>)
+    (*parser <InfixFinal>)
 
     (*parser <EmptyParser>)
     (*parser (char #\())
@@ -848,14 +889,27 @@
     (*parser <EmptyParser>)
     (*parser (char #\)))
     (*parser <EmptyParser>)
-    (*caten 8)
+    (*caten 7)
     (*pack-with 
-      (lambda (function space open space1 arglist space2 close space3)
-                  `(,function ,@arglist)))
+      (lambda (space open space1 arglist space2 close space3)
+                  arglist))
+    *star
+    (*caten 2)
+      (*pack-with 
+            (lambda (function expression)
+                 ; only final:
+                (if (equal? 0 (length expression))
+                    function
+                    ; Length of 1:
+                    (if (equal? 1 (length expression))
+                        `(,function ,@(car expression))
+                        
+                     (letrec ((loopPrint
+                      (lambda (expression1 lst1)
+                         (if (equal? (length lst1) 1) `(,expression1 ,@(car lst1))
+                             (loopPrint `(,expression1 ,@(car lst1)) (cdr lst1))))))
+                             (loopPrint `(,function ,@(car expression)) (cdr expression)))))))
     
-    (*parser <InfixAddOrSub>)
-
-    (*disj 2)
     (*parser <EmptyParser>)
     (*caten 3)
     (*pack-with 
@@ -865,7 +919,6 @@
         (display "\n")
                   functionOrExpression))
         done))
-
 
 (define <InfixPrefixExtensionPrefix>
   (new 
@@ -896,12 +949,10 @@
 (define <InfixExpression>
     (new
       (*parser <EmptyParser>)
-      (*parser <InfixNeg>)
       (*parser <InfixSexprEscape>)
-      (*parser <InfixFuncall>)
-      (*parser <InfixAddOrSub>)
-
-      (*disj 4)
+      (*parser <Boolean>)
+      (*disj 2)
+      
       (*parser <EmptyParser>)
 
       (*caten 3)
