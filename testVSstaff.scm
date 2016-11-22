@@ -55,7 +55,7 @@
 	(list	"#\\a" "#\\B" "#\\9" "#\\space" "#\\lambda"
 		"#\\newline" "#\\nul" "#\\page"
 		"#\\return" "#\\tab" "#\\x41" "#\\x23" "#\\x20" "  #\\xab   "
-		"#\\x0"
+		"#\\x0" "#\\abc" "#\\x" "#\\x[2]" "#\\abc[1]"
 	  ))
 	  
 (define stringTests
@@ -64,7 +64,7 @@
 	  "\"\\n\"" "\"\\r\"" "\"\\x09af;\"" "\"\\x41;\""
 	  "\" 4 1;\"" "    \"  Akuna Matata  \"    "
 	  "\"\\x0;\""
-	 
+
 	  "\"\\x40; ABC \\t \\\" \" "
 	  ))
 
@@ -73,6 +73,8 @@
 	"0123456789" "abcdeABCDE" "!$^*-_=+<>?/" 
 	"0123456789abcdeABCDE!$^*-_=+<>?/" 
 	"    Hellomynameisasaf   "
+	"123Ff"
+	"01a"
 	  ))
 	  
 	  
@@ -132,12 +134,23 @@
 	    "  #%  5   /   2 [-4 + a *  -7/16  * 9 * 154 ] "
 	    " ## 123a[ + bc321 ** 3  /  6]" 
 	    "## a[0] + a[a[a[a[a[0]]]]]"
+	    "##ABC[##a+2]"
+	    "##ABC[###\\a]"
+	    "##-##ab3+5b+5[3]"
+	    "##()()()()[]"
+	    "##1/2-2Symbol+Sym45[5+4*a-12/45]"
+	    "#%1a[5^4]"
+	    "##a[1b]"
+	    "##a[1]"
+	    "##1+1[1+1]"
+	    "##1*(2+3)[50/34+(-1/2+abc)]"
 ))  
 
 (define infixFuncallTests
 	(list	  
 	    "##f()"
 	    "##A(      )"
+	    "##-FUNC()"
 	    "##func(a,b,c,d,e,fgh)"
 	    "## FunctionCall123 ( arg1  , arg2  , arg3 , arg5)"
 	    "## func ( 1+2, 3*4)"
@@ -184,22 +197,33 @@
 	    "## a ^ b ^ c ^ 3 ^ d + -50/45 ^ abc"
 	    "## 8 ^ (7+8)[5][6]"
 	    "## a + b * c * d"
-	    "## a + b ^ c ^ d"	    
+	    "## a + b ^ c ^ d"
+	    "#% a/b + c/d"
+	    "##-a*-b"
+	    "##-a-b-c"
+	    "##a+b+c"	    
 ))
 
 (define infixSexprEscapeTests 
   (list
     "## ## #t"
     "## #% \"abc\""
+    "####a+b +c"
+    "##-##a+b +c+d"
+    "##(X ^ ##a+b +c*d)"
 ))
 
 (define commentsTests
   (list
     "## 2 - 3 - 4"
-    "## 2 + #; 3 - 4 + 5 * 6 ^ 7 8 #; 1+2^3"
+    "## 2- #; 3 - 4 + 5 * 6 ^ 7 +8 #; 1+2^3"
+    "#####;1^2+3 \"abc\""
+    "#####;\"a+b\" 1/2"
+    "#####;##2^3 1/2 ; Akuna Matata"
     
     ; Line Comments
     " 2^5 ; ## 3+4+5"
+    "; abc"
     
     ; sexpr comment
     "## 2 #; \"abc\""
@@ -215,6 +239,7 @@
     "#; \"345\" ## 2+ #; 3- 5*6 8 #; \"abc\""
     " \" Akuna Matata \" ; ABCE1234"
     "#; #\\lambda ## #; 5^64*-12/45 1+2+FUNC(a#;1+2+3,b,1+5) #; \"abcde\""
+    "#; a"
    ))
 
 (define MayerExamples
@@ -234,7 +259,7 @@
   #%(* x y),
   #;this-is-in-prefix
   #%(expt x z))))
-  #%2)"  
+  #%2)"
   
   "## 2 + #; 3 - 4 + 5 * 6 ^ 7 8"
   
@@ -258,6 +283,8 @@
   "`(the answer is ##2 * 3 + 4 * 5)"
 
   "(+ 1 ##2 + 3 a b c)"
+  
+  "##-a-b-c"
 
 ))
 
@@ -282,4 +309,3 @@
       (cons "Comments" commentsTests)
       (cons "MayerExamples" MayerExamples)    
 ))
-

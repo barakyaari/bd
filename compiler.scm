@@ -140,6 +140,13 @@
     (*disj 2)
     done))
 
+(define <EmptyHexChar>
+  (new 
+    (*parser (char-ci #\x))
+    (*parser <HexChar>)
+    *not-followed-by
+        done))
+
 (define <HexUnicodeChar>
   (new 
     (*parser (char-ci #\x))
@@ -155,9 +162,12 @@
   (new 
     (*parser <CharPrefix>)
     (*parser <NamedChar>)
+    (*parser <EmptyHexChar>)
     (*parser <HexUnicodeChar>)
     (*parser <VisibleSimpleChar>)
-    (*disj 3)
+    (*parser <VisibleSimpleChar>)
+    *not-followed-by
+    (*disj 4)
     (*caten 2)
     (*pack-with
       (lambda(a b)
@@ -532,7 +542,9 @@
     (*parser <EmptyParser>) 
     (*parser <InfixSymbol>)
     (*parser <InfixNumber>)
-    (*disj 2)
+    (*delayed (lambda () <InfixSexprEscape>))
+
+    (*disj 3)
     
     (*parser <EmptyParser>)
     
@@ -705,7 +717,6 @@
          (*pack-with (lambda (minus expression)
             `(- ,expression)))
         (*disj 2)
-
         
     (*parser <EmptyParser>)
     (*parser <InfixComment>) *star
@@ -728,7 +739,7 @@
     (*pack-with
         (lambda (space1 comment1 addOrSub space2 comment2 num2 space3 comment3)
            `(,(string->symbol (list->string addOrSub))
-            ,num2)))
+             ,num2)))
     *star
     (*caten 2)
     
@@ -753,25 +764,31 @@
 (define <InfixArgList>
   
   (new
-     
     (*parser <EmptyParser>)
- (*delayed (lambda () <InfixExpression>))    
+    (*parser <InfixComment>) *star
+
+ (*delayed (lambda () <InfixExpression>)) 
+   
     (*parser <EmptyParser>)
+    (*parser <InfixComment>) *star
+
     (*parser (char #\,))
     (*parser <EmptyParser>)
  (*delayed (lambda () <InfixExpression>))    
 
     (*parser <EmptyParser>)
-    (*caten 5)
+    (*parser <InfixComment>) *star
+
+    (*caten 7)
     (*pack-with 
-      (lambda (space1 psik space2 addOrSub space3)
+      (lambda (space1 comment0 psik space2 addOrSub comment1 space3)
                   addOrSub
                   ))
     *star
     (*parser <EmptyParser>)
-    (*caten 4)
+    (*caten 5)
     (*pack-with 
-      (lambda (space1 addOrSub1 list space2)
+      (lambda (space1 comment1 addOrSub1 list space2)
         `(,addOrSub1 ,@list)))
     (*parser <epsilon>) ;In Meir's parsers
     (*disj 2)
@@ -847,9 +864,8 @@
 
     (new
       (*parser <EmptyParser>)
-      (*parser <InfixSexprEscape>)
       (*parser <InfixAddOrSub>)
-      (*disj 2)
+      
       
       (*parser <EmptyParser>)
 
