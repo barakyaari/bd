@@ -99,19 +99,12 @@
     (*caten 2)
     (*pack-with
       (lambda(a b)
-        (display "CharPrefix: ")
-        (display "\n")
         `(#\#  #\\)))
     done))
 
 (define <VisibleSimpleChar>
   (new 
   	 (*parser (range #\! #\~))
-     (*pack (lambda(_)
-        (display "VisibleSimpleChar: ")
-        (display _)
-        (display "\n")
-      _))
     done))
 
 (define <NamedChar>
@@ -138,11 +131,6 @@
     (*pack (lambda (_) (integer->char 9)))
     
     (*disj 7)
-         (*pack (lambda(_)
-        (display "NamedChar: ")
-        (display _)
-        (display "\n")
-      _))
     done))
 
 (define <HexChar>
@@ -150,11 +138,6 @@
     (*parser (range #\0 #\9))
     (*parser (range-ci #\a #\f))
     (*disj 2)
-     (*pack (lambda(_)
-        (display "HexChar: ")
-        (display _)
-        (display "\n")
-      _))
     done))
 
 (define <HexUnicodeChar>
@@ -163,10 +146,6 @@
     (*parser <HexChar>) *plus
     (*caten 2)
     (*pack-with (lambda(x lista)
-
-        (display "HexUnicodeChar: ")
-        (display lista)
-        (display "\n")
                   (integer->char
                     (string->number 
                       (list->string lista) 16))))
@@ -182,9 +161,6 @@
     (*caten 2)
     (*pack-with
       (lambda(a b)
-        (display "Char: ")
-        (display b)
-        (display "\n")
         b))
     done))
 
@@ -223,10 +199,6 @@
     (*caten 2)
     (*pack-with
       (lambda (leadingzeros number)
-        (display "Natural: ")
-        (display number)
-        (display "\n")
-         
         number))
     done))
 
@@ -240,8 +212,7 @@
        (*pack-with
 
          (lambda (minus n) 
-           (display "got minus from integer\n")
-            (- n)))
+           (- n)))
 
     (*parser (char #\+))
        (*parser <EmptyParser>)
@@ -257,12 +228,6 @@
        (*parser <Zero>)
        
        (*disj 4)
-    (*pack (lambda(_)
-        (display "Integer: ")
-        (display _)
-        (display "\n")
-      _))
-       
        done))
 
 (define <Fraction>
@@ -273,13 +238,6 @@
        (*caten 3)
        (*pack-with
          (lambda (num div den)
-        (display "Fraction: ")
-        (display num)
-        (display " ")
-
-        (display den)
-
-        (display "\n")
            (/ num den)))
        done))
 
@@ -290,12 +248,6 @@
     (*disj 2)
     (*delayed (lambda () <SymbolChar>))
     *not-followed-by 
-        (*pack
-      (lambda(_)
-        (display "Number: ")
-        (display _)
-        (display "\n")
-      _))
     done))
 
 ;; --------------------------------
@@ -325,11 +277,6 @@
     (*parser (word "\\r"))
     (*pack (lambda(_) #\return))
     (*disj 6)
-    (*pack (lambda(_)
-        (display "StringMetaChar: ")
-        (display _)
-        (display "\n")
-        _))
     done))
 
 (define <StringHexChar>
@@ -361,11 +308,6 @@
     (*parser <StringLiteralChar>)
     (*parser <StringHexChar>)
     (*disj 3)
-    (*pack (lambda(_)
-          (display "StringChar: \n")
-        (display _)
-          (display "\n")
-        _))
     done))
 
 
@@ -384,10 +326,6 @@
     
     (*pack-with
       (lambda(intro word outro)
-        (display "String: \n")
-        (display word)
-        (display "\n")
-
         (list->string word)))
     done))
 
@@ -416,11 +354,6 @@
     (*parser (char #\?))
     (*parser (char #\/))
     (*disj 15)
-    (*pack (lambda(_)
-          (display "SymbolChar: ")
-        (display _)
-        (display "\n")
-        _))
     
     done))
 
@@ -428,9 +361,6 @@
   (new 
     (*parser <SymbolChar>) *plus
     (*pack (lambda(_)
-          (display "Symbol: ")
-        (display _)
-        (display "\n")
                   (string->symbol
                     (list->string _))))
     done))
@@ -449,7 +379,6 @@
     (*caten 4)
     (*pack-with
       (lambda(open emptyparser expr1 close)
-       (display "ProperList\n")
         `(,@expr1 )))
     done))
 
@@ -465,8 +394,6 @@
         (*caten 5)
         (*pack-with
           (lambda(open expr1 point expr2 close)
-           (display "ImproperList\n")
-
           `(,@expr1  . ,expr2 )))
 
        done))
@@ -482,8 +409,6 @@
     (*caten 4)
     (*pack-with
       (lambda (a b lista d)
-             (display "Vector\n")
-
         (list->vector lista )))
     done))
 
@@ -494,8 +419,6 @@
     (*caten 2)
     (*pack-with
       (lambda(sign e)
-           (display "Quoted\n")
-
          (list 'quote  e)))
     done))
 
@@ -506,7 +429,6 @@
     (*caten 2)
     (*pack-with
       (lambda(sign e)
-               (display "Quasi\n")
 
          (list 'quasiquote  e)))
     done))
@@ -518,7 +440,6 @@
     (*caten 2)
     (*pack-with
       (lambda(sign e)
-               (display "Unquoted\n")
         (list 'unquote  e)))
     done))
 
@@ -530,13 +451,30 @@
     (*caten 3)
     (*pack-with
       (lambda(sign strudel e)
-        (display "UnquotedAndSpliced\n")
         (list 'unquote-splicing e)))
     done))
 
 ;; --------------------------------
 ;;           Infix:
 ;; --------------------------------
+
+(define <InfixCommentExpression>
+  (new 
+        (*parser (word "#;"))
+        (*parser <EmptyParser>)
+       (*delayed (lambda () <InfixExpression>))
+       (*parser <EmptyParser>)
+       (*caten 4)
+       done))
+
+(define <InfixComment>
+  (new 
+    (*parser <line-comment>)
+    (*parser <InfixCommentExpression>)
+    (*disj 2)
+
+    done))
+
 
 (define <InfixNumber>
   (new 
@@ -545,12 +483,7 @@
     (*disj 2)
     (*delayed (lambda () <InfixSymbolChar>))
     *not-followed-by 
-        (*pack
-      (lambda(_)
-        (display "Number: ")
-        (display _)
-        (display "\n")
-      _))
+
     done))
 
 (define <InfixSymbolChar>
@@ -569,11 +502,6 @@
     (*parser (char #\>))
     (*parser (char #\?))
     (*disj 10)
-    (*pack (lambda(_)
-          (display "InfixSymbolChar: ")
-        (display _)
-        (display "\n")
-      _))
     done))
 
 (define <InfixSymbol>
@@ -596,12 +524,6 @@
             (string->symbol
                     (list->string _))))        
     (*disj 2)
-       (*pack 
-          (lambda (_)
-          (display "InfixSymbol: ")
-        (display _)
-        (display "\n")
-      _))
 
     done))
 
@@ -610,26 +532,12 @@
     (*parser <EmptyParser>) 
     (*parser <InfixSymbol>)
     (*parser <InfixNumber>)
-    (*pack (lambda (_)
-             (display "got number: ")
-             (display _)
-             (display "\n")
-           _))
-    
-    (*pack (lambda (_)
-             (display "got Symbol: ")
-             (display _)
-             (display "\n")
-           _))
     (*disj 2)
     
     (*parser <EmptyParser>)
     
     (*caten 3)
     (*pack-with (lambda (space1 expression space2)
-        (display "5.InfixFinal: ")
-        (display expression)
-        (display "\n")
       expression))
     done))
 
@@ -646,9 +554,6 @@
     
     (*pack-with
         (lambda (space open space1 expression space2 close space3)
-        (display "4.InfixParen: ")
-        (display expression)
-        (display "\n")
            expression))
     done))
 
@@ -660,6 +565,7 @@
     done))
 
 (define <InfixArrayGet>
+  
     (new
     (*parser <EmptyParser>)
     (*parser <InfixFinal>)
@@ -702,9 +608,6 @@
     (*parser <EmptyParser>)
     (*caten 3)
     (*pack-with (lambda (space expression space2)
-        (display "4.ArrayGet: ")
-        (display expression)
-        (display "\n")
                   expression))
     done))
         
@@ -750,9 +653,6 @@
     (*caten 3)
     (*pack-with 
       (lambda (space1 expression space2)
-        (display "3.Power: ")
-        (display expression)
-        (display "\n")
         expression))
     done))
 
@@ -790,16 +690,14 @@
     (*parser <EmptyParser>)
     (*caten 3)
     (*pack-with (lambda (space1 expression space2)
-        (display "2.MulOrDiv: ")
-        (display expression)
-        (display "\n")
             expression))
     done))
 
 (define <InfixAddOrSub>
     (new
+    (*parser <InfixComment>) *star
     (*parser <EmptyParser>)
-    
+    (*disj 2)
     (*parser <InfixMulOrDiv>)
         (*parser (word "-"))
            (*parser <InfixMulOrDiv>)
@@ -810,11 +708,13 @@
 
         
     (*parser <EmptyParser>)
+    (*parser <InfixComment>) *star
     (*parser (word "-"))
     (*parser (word "+"))
     (*disj 2)
 
     (*parser <EmptyParser>)
+    (*parser <InfixComment>) *star
     (*parser <InfixMulOrDiv>)
         (*parser (word "-"))
            (*parser <InfixMulOrDiv>)
@@ -823,10 +723,10 @@
             `(- ,expression)))
         (*disj 2)
     (*parser <EmptyParser>)
-
-    (*caten 5)
+    (*parser <InfixComment>) *star
+    (*caten 8)
     (*pack-with
-        (lambda (space1 addOrSub space2 num2 space3)
+        (lambda (space1 comment1 addOrSub space2 comment2 num2 space3 comment3)
            `(,(string->symbol (list->string addOrSub))
             ,num2)))
     *star
@@ -847,13 +747,11 @@
 
     (*pack-with 
       (lambda (space1 expression space2)
-        (display "1.InfixAddOrSub: ")
-        (display expression)
-        (display "\n")
           expression))
     done))
 
 (define <InfixArgList>
+  
   (new
      
     (*parser <EmptyParser>)
@@ -888,13 +786,15 @@
     (*parser <EmptyParser>)
     (*parser (char #\())
     (*parser <EmptyParser>)
+    (*parser <InfixComment>) *star
     (*parser <InfixArgList>)
     (*parser <EmptyParser>)
+    (*parser <InfixComment>) *star
     (*parser (char #\)))
     (*parser <EmptyParser>)
-    (*caten 7)
+    (*caten 9)
     (*pack-with 
-      (lambda (space open space1 arglist space2 close space3)
+      (lambda (space open space1 comment1 arglist space2 comment2 close space3)
                   arglist))
     *star
     (*caten 2)
@@ -917,9 +817,6 @@
     (*caten 3)
     (*pack-with 
       (lambda (space1 functionOrExpression space2)
-        (display "1.InfixFuncall: ")
-        (display functionOrExpression)
-        (display "\n")
                   functionOrExpression))
         done))
 
@@ -943,13 +840,11 @@
     (*caten 5)
     (*pack-with 
       (lambda (space pre space2 sexpr space3)
-        (display "1.InfixSexprEscape: ")
-        (display sexpr)
-        (display "\n")
           sexpr))
     done))
 
 (define <InfixExpression>
+
     (new
       (*parser <EmptyParser>)
       (*parser <InfixSexprEscape>)
@@ -960,18 +855,17 @@
 
       (*caten 3)
       (*pack-with (lambda (space expression space2)
-        (display "InfixExpression: ")
-        (display expression)
-        (display "\n")
                     expression ))
       done))
 
 (define <InfixExtension>
   (new 
+    (*parser <InfixComment>) *star
+
     (*parser <InfixPrefixExtensionPrefix>) 
     (*parser <InfixExpression>)
-    (*caten 2) 
-    (*pack-with (lambda (prefix expre)
+    (*caten 3) 
+    (*pack-with (lambda (comment1 prefix expre)
                   expre))
     done))
 
