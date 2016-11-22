@@ -233,14 +233,13 @@
 (define <Integer>
   (new 
        (*parser (char #\-))
-       (*parser <EmptyParser>)
        (*parser <Natural>)
        (*parser <Zero>)
        (*disj 2)
-       (*caten 3)
+       (*caten 2)
        (*pack-with
 
-         (lambda (minus space n) 
+         (lambda (minus n) 
            (display "got minus from integer\n")
             (- n)))
 
@@ -609,14 +608,14 @@
 (define <InfixFinal>
   (new
     (*parser <EmptyParser>) 
-    
+    (*parser <InfixSymbol>)
     (*parser <InfixNumber>)
     (*pack (lambda (_)
              (display "got number: ")
              (display _)
              (display "\n")
            _))
-    (*parser <InfixSymbol>)
+    
     (*pack (lambda (_)
              (display "got Symbol: ")
              (display _)
@@ -947,6 +946,7 @@
     done))
 
 (define <InfixExpression>
+  (^<skipped*>
     (new
       (*parser <EmptyParser>)
       (*parser <InfixSexprEscape>)
@@ -961,7 +961,7 @@
         (display expression)
         (display "\n")
                     expression ))
-      done))
+      done)))
 
 (define <InfixExtension>
   (new 

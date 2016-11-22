@@ -263,22 +263,11 @@
 
 (runAllTests
   (list
-      (cons "Boolean" booleanTests)
-      (cons "Number" numberTests)
-      (cons "Char" charTests)
-      (cons "String" stringTests)
-      (cons "Symbol" symbolTests)
-      (cons "Vector" vectorTests)
-      (cons "Quasiquoted" quasiquotedTests)
-      (cons "Quoted" quotedTests)
-      (cons "UnquoteAndSpliced" unquoteAndSplicedTests)
-      (cons "Unquoted" unquotedTests)
-      (cons "Proper List" properListTests)
-      (cons "Improper List" improperListTests)
+      
       (cons "InfixArrayGet" infixArrayGetTests)
       (cons "infixSexprEscape" infixSexprEscapeTests)
-       (cons "InfixExp" infixExpTests)  
-       (cons "InfixFuncall" infixFuncallTests)
+      (cons "InfixExp" infixExpTests)  
+      (cons "InfixFuncall" infixFuncallTests)
       (cons "Comments" commentsTests)
       (cons "MayerExamples" MayerExamples)    
 ))
