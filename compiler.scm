@@ -950,7 +950,7 @@
     (new
       (*parser <EmptyParser>)
       (*parser <InfixSexprEscape>)
-      (*parser <Boolean>)
+      (*parser <InfixAddOrSub>)
       (*disj 2)
       
       (*parser <EmptyParser>)
