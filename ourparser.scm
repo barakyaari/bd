@@ -1,20 +1,16 @@
 (load "parser.so")
+(load "compiler.scm")
 
 (display "Test starting...\n")
 (display "Expression tested:\n")
 
-(define test  "##f(x)[a]")
+(define test  "##f(g(x()))")
 
 (display test)
 (display "\n")
-(display "\n- ---  Meir's parser: ----\n\n")
-
 (test-string <sexpr> test)
 
-
-(load "compiler.scm")
-(display "\n- ---  Our parser: ----\n\n")
-
+(display "\n- ---  Meir's parser: ----\n\n")
 
 (test-string <sexpr1> test)
 
