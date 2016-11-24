@@ -580,7 +580,10 @@
   
     (new
     (*parser <EmptyParser>)
+    (*delayed (lambda () <InfixFuncall>))
+
     (*parser <InfixFinal>)
+    (*disj 2)
     (*parser (char #\())
      *not-followed-by       
     (*parser <InfixParen>)
@@ -914,9 +917,6 @@
 ; ====================================================
 ; ====================================================
 
-
-(define <sexpr1> <sexpr>)
-
 (define <sexpr>
   (^<CommentOutPrefix*>
   (new 
@@ -942,7 +942,7 @@
         expr))
     done)))
 
-
+(define <Sexpr> <sexpr>)
 
 ; ====================================================
 ; ====================================================
