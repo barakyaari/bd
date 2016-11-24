@@ -2,7 +2,7 @@
 (load "parser.so")
 (load "compiler.scm")
 
-(define <my-sexpr> <ssexpr>) ; Change to your sexpr name
+(define <my-sexpr> <Sexpr>) ; Change to your sexpr name
 (define <staff-sexpr> <sexpr>)
 
 (define testVSstaff
@@ -56,7 +56,7 @@
 	(list "#\\a" "#\\B" "#\\9" "#\\space" "#\\lambda"
 		"#\\newline" "#\\nul" "#\\page"
 		"#\\return" "#\\tab" "#\\x41" "#\\x23" "#\\x20" "  #\\xab   "
-		"#\\x0" "#\\x110000"
+		"#\\x0" "#\\x1100"
 	  ))
 	  
 (define stringTests
@@ -65,7 +65,7 @@
 	  "\"\\n\"" "\"\\r\"" "\"\\x09af;\"" "\"\\x41;\""
 	  "\" 4 1;\"" "    \"  Akuna Matata  \"    "
 	  "\"\\x0;\""
-	  "\"\\x110000;\"" 
+	  "\"\\x1100;\"" 
 	  "\"\\x40; ABC \\t \\\" \" "
 	  ))
 
