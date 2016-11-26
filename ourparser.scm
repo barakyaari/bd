@@ -8,7 +8,7 @@
 
 (display test)
 (display "\n")
-(test-string <ssexpr> test)
+(test-string <Sexpr> test)
 
 (display "\n- ---  Meir's parser: ----\n\n")
 
