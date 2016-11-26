@@ -151,11 +151,14 @@
   (new 
     (*parser (char-ci #\x))
     (*parser <HexChar>) *plus
-    (*caten 2)
+        (*caten 2)
     (*pack-with (lambda(x lista)
-                  (integer->char
+                  
                     (string->number 
-                      (list->string lista) 16))))
+                      (list->string lista) 16)))
+    (*guard (lambda (x) (< x 110000)))
+    (*pack 
+    (lambda(x) (integer->char x)))
     done))
 
 (define <Char>
@@ -294,19 +297,18 @@
     (*parser (char #\\))
     (*parser (char-ci #\x))
     (*parser <HexChar>) *star
+
     (*parser (char #\;))
 
     (*caten 4)
     (*pack-with (lambda (slash x charlist semicolun)
-        (display "StringHexChar: ")
-        (display (integer->char
+       
                     (string->number 
                       (list->string charlist) 16)))
-        (display "\n")
 
-                (integer->char
-                    (string->number 
-                      (list->string charlist) 16))))
+    (*guard (lambda (x) (< x 110000)))
+    (*pack 
+    (lambda(x) (integer->char x)))
     
     done))
 
@@ -916,6 +918,9 @@
 
 ; ====================================================
 ; ====================================================
+(define <ssexpr> <sexpr>)
+
+
 (define <sexpr>
   (^<CommentOutPrefix*>
   (new 
