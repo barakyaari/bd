@@ -2,7 +2,7 @@
 (load "parser.so")
 (load "compiler.scm")
 
-(define <my-sexpr> <Sexpr>) ; Change to your sexpr name
+(define <my-sexpr> <ssexpr>) ; Change to your sexpr name
 (define <staff-sexpr> <sexpr>)
 
 (define testVSstaff
