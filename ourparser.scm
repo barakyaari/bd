@@ -4,15 +4,15 @@
 (display "Test starting...\n")
 (display "Expression tested:\n")
 
-(define test  "##f(g(x()))")
+(define test "##4-----5")
 
 (display test)
 (display "\n")
-(test-string <sexpr> test)
+(test-string <ssexpr> test)
 
 (display "\n- ---  Meir's parser: ----\n\n")
 
-(test-string <sexpr1> test)
+(test-string <sexpr> test)
 
 
 
