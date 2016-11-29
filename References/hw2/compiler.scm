@@ -255,4 +255,4 @@
 					`(if ,v1 ,e1))
 				`(if ,v1 ,e1 ,(expand-cond (car rest) (cdr rest)))))))
 				
- (parse '(if a b))
+ (parse a)
