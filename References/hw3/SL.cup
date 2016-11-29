@@ -1,0 +1,197 @@
+package SL;
+
+import java_cup.runtime.*;
+import java.util.*;
+import SL.Lexer.*;
+import SL.AST.*;
+
+parser code {:
+    public void syntax_error(java_cup.runtime.Symbol current) {
+        Token t = (Token) current;
+        throw new SyntaxError("Syntax error in line " + t.line + " '" + t.toText() + "'");
+    }
+:};
+
+terminal String QUOTE; 
+terminal String ID, COLS, ROWS;
+terminal float NUM;
+terminal ASSERT, ASSIGN, ASSIGN_PLUS, ASSIGN_MINUS, ASSIGN_TIMES, ASSIGN_DIV;
+terminal SEMI, COLON, COMMA, DOTDOT, RB, LB, RP, LP, LCB, RCB;
+terminal PLUS, MINUS, TIMES, DIVIDE, EQ, NEQ, GT, GTE, LT, LTE, LAND, NOT, LOR, UMINUS;
+terminal Expr TABLE, IF, ELSE, FOR, VAR, DEF;
+terminal Element ERROR;
+terminal empty;
+
+non terminal Program Program;
+non terminal ElementList ElementList;
+non terminal Element Element;
+non terminal Assert Assert;
+non terminal Constant Constant;
+non terminal Assign Assign;
+non terminal Condition Condition;
+non terminal For For;
+non terminal FunctionDef FunctionDef;
+non terminal ColumnDef ColumnDef;
+non terminal Stmt Stmt;
+non terminal StmtList StmtList;
+non terminal Expr Expr;
+non terminal Call Call;
+non terminal Args Args;
+non terminal ExprList ExprList;
+
+
+precedence left LOR;
+precedence left LAND;
+precedence left NOT;
+precedence left LT, LTE, GT, GTE, EQ, NEQ;
+precedence left PLUS, MINUS;
+precedence left TIMES, DIVIDE;
+precedence left UMINUS;
+
+
+start with Program;
+
+Program     ::= ElementList:cl
+				{: RESULT = new Program(cl); :};
+
+ElementList	::= Element:c
+				{: RESULT = new ElementList(c); :}
+				| ElementList:cl Element:c
+				{: cl.append(c); RESULT = cl; :};
+				
+Element     ::= Assert:a
+				{: RESULT = a; :}
+				| Constant:c
+				{: RESULT = c; :}
+				| FunctionDef:fd
+				{: RESULT = fd; :}
+				| ColumnDef:cd
+				{: RESULT = cd; :}
+				| ERROR: e
+				{: RESULT = e; :};
+
+Assert   	::= ASSERT Expr:e COLON QUOTE:q
+				{: RESULT = new Assert(e, q); :};
+				
+Constant    ::= VAR ID:id ASSIGN Expr:e
+				{: RESULT = new Constant(id, e); :};
+				
+FunctionDef ::= DEF ID:id LP RP LCB StmtList:body RCB
+				{: RESULT = new FunctionDef(id, null, body); :}
+				| DEF ID:id LP RP LCB RCB
+				{: RESULT = new FunctionDef(id, null, null); :}
+				| DEF ID:id LP Args:args RP LCB RCB
+				{: RESULT = new FunctionDef(id, args, null); :}
+				| DEF ID:id LP Args:args RP LCB StmtList:body RCB
+				{: RESULT = new FunctionDef(id, args, body); :};
+
+ColumnDef   ::= DEF TABLE LB Expr:i RB LB ID:j RB LCB RCB
+				{: RESULT = new ColumnDef(i, j, null); :}
+				| DEF TABLE LB Expr:i RB LB ID:j RB LCB StmtList:body RCB
+				{: RESULT = new ColumnDef(i, j, body); :};
+
+StmtList  	::=  empty
+				| Stmt:s
+				{: RESULT = new StmtList(s); :}
+				| StmtList:sl SEMI Stmt:s
+				{: sl.append(s); RESULT = sl; :};
+
+Stmt		::= Expr:e
+				{: RESULT = e; :}
+				| Assign:a
+				{: RESULT = a; :}
+				| Condition:c
+				{: RESULT = c; :}
+				| For:l
+				{: RESULT = l; :};			
+
+Assign      ::= ID:var ASSIGN Expr:val
+				{: RESULT = new Assign(new Var(var), val); :}
+				| VAR ID:var ASSIGN Expr:val
+				{: RESULT = new Assign(new Var(var), val); :}
+				| ID:var ASSIGN_PLUS Expr:val
+				{: RESULT = new Assign(new Var(var), new BinaryExpr(Ops.PLUS, new Var(var), val)); :}
+				| ID:var ASSIGN_MINUS Expr:val
+				{: RESULT = new Assign(new Var(var), new BinaryExpr(Ops.MINUS, new Var(var), val)); :}
+				| ID:var ASSIGN_TIMES Expr:val
+				{: RESULT = new Assign(new Var(var), new BinaryExpr(Ops.TIMES, new Var(var), val)); :}
+				| ID:var ASSIGN_DIV Expr:val
+				{: RESULT = new Assign(new Var(var), new BinaryExpr(Ops.DIVIDE, new Var(var), val)); :};
+						
+Condition   ::= IF LP Expr:test RP LCB RCB
+				{: RESULT = new Condition(test, null); :}
+				| IF LP Expr:test RP LCB StmtList:dit RCB
+				{: RESULT = new Condition(test, dit); :}
+				| IF LP Expr:test RP LCB RCB ELSE LCB StmtList:dif RCB
+				{: RESULT = new Condition(test, null, dif); :}
+				| IF LP Expr:test RP LCB StmtList:dit RCB ELSE LCB RCB
+				{: RESULT = new Condition(test, dit, null); :}
+				| IF LP Expr:test RP LCB RCB ELSE LCB RCB
+				{: RESULT = new Condition(test, null, null); :}
+				| IF LP Expr:test RP LCB StmtList:dit RCB ELSE LCB StmtList:dif RCB
+				{: RESULT = new Condition(test, dit, dif); :};
+				
+For  		::=	FOR LP ID:id ASSIGN Expr:start DOTDOT Expr:end RP LCB RCB
+				{: RESULT = new For(id, start, end, null); :}
+				| FOR LP ID:id ASSIGN Expr:start DOTDOT Expr:end RP LCB StmtList:body RCB
+				{: RESULT = new For(id, start, end, body); :};
+
+Expr        ::= Expr:e1 PLUS Expr:e2
+				{: RESULT = new BinaryExpr(Ops.PLUS, e1, e2); :}
+				| Expr:e1 MINUS Expr:e2
+				{: RESULT = new BinaryExpr(Ops.MINUS, e1, e2); :}
+				| Expr:e1 TIMES Expr:e2
+				{: RESULT = new BinaryExpr(Ops.TIMES, e1, e2); :}
+				| Expr:e1 DIVIDE Expr:e2
+				{: RESULT = new BinaryExpr(Ops.DIVIDE, e1, e2); :}
+				| MINUS Expr:e1
+				{: RESULT = new BinaryExpr(Ops.MINUS, new Num(0), e1); :} %prec UMINUS
+				| NOT Expr:e1
+				{: RESULT = new NotExpr(e1); :}
+				| Expr:e1 EQ Expr:e2
+				{: RESULT = new BinaryExpr(Ops.EQ, e1, e2); :}
+				| Expr:e1 NEQ Expr:e2
+				{: RESULT = new BinaryExpr(Ops.NEQ, e1, e2); :}
+				| Expr:e1 GT Expr:e2
+				{: RESULT = new BinaryExpr(Ops.GT, e1, e2); :}
+				| Expr:e1 GTE Expr:e2
+				{: RESULT = new BinaryExpr(Ops.GTE, e1, e2); :}
+				| Expr:e1 LT Expr:e2
+				{: RESULT = new BinaryExpr(Ops.LT, e1, e2); :}
+				| Expr:e1 LTE Expr:e2
+				{: RESULT = new BinaryExpr(Ops.LTE, e1, e2); :}
+				| Expr:e1 LAND Expr:e2
+				{: RESULT = new BinaryExpr(Ops.LAND, e1, e2); :}
+				| Expr:e1 LOR Expr:e2
+				{: RESULT = new BinaryExpr(Ops.LOR, e1, e2); :}
+				| TABLE LB Expr:i RB LB Expr:j RB
+				{: RESULT = new TableExpr(i, j); :}
+				| Call:c
+				{: RESULT = c; :}
+				| ROWS:r
+				{: RESULT = Var.ROWS; :}
+				| COLS:c
+				{: RESULT = Var.COLS; :}
+				| NUM:n 
+				{: RESULT = new Num(n); :}
+				| ID:s 
+				{: RESULT = new Var(s); :}
+				| LP Expr:e RP
+				{: RESULT = e; :};
+		
+Call 		::= ID:func LP RP
+				{: RESULT = new Call(func, null); :}
+				| ID:func LP ExprList:args RP
+				{: RESULT = new Call(func, args); :};
+
+ExprList  	::= empty
+				| Expr:e
+				{: RESULT = new ExprList(e); :}
+				| ExprList:el COMMA Expr:e
+				{: el.append(e); RESULT = el; :};
+				
+Args 	 	::= ID:arg
+				{: RESULT = new Args(arg); :}
+				| Args:args COMMA ID:arg
+				{: args.append(arg); RESULT = args; :};
+				
