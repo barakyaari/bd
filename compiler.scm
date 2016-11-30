@@ -1,30 +1,31 @@
 (load "pattern-matcher.scm")
 ; --------------------------- Helpers ------------------------------
+; -- meirs expand-qq - check if usable:
 (define expand-qq
   (lambda (e)
     (cond ((unquote? e) (cadr e))
-        ((unquote-splicing? e)
-          (error 'expand-qq "unquote-splicing here makes no sense!"))
-        ((pair? e)
-          (let ((a (car e))
-              (b (cdr e)))
-            (cond ((unquote-splicing? a) `(append ,(cadr a) ,(expand-qq b)))
-                ((unquote-splicing? b) `(cons ,(expand-qq a) ,(cadr b)))
-                (else `(cons ,(expand-qq a) ,(expand-qq b))))))
-        ((vector? e) `(list->vector ,(expand-qq (vector->list e))))
-        ((or (null? e) (symbol? e)) `',e)
-        (else e))))
+    ((unquote-splicing? e) (error 'expand-qq "unquote-splicing here makes no sense!"))
+    ((pair? e)
+     (let ((a (car e))
+     (b (cdr e)))
+       (cond ((unquote-splicing? a) `(append ,(cadr a) ,(expand-qq b)))
+       ((unquote-splicing? b) `(cons ,(expand-qq a) ,(cadr b)))
+       (else `(cons ,(expand-qq a) ,(expand-qq b))))))
+    ((vector? e) `(list->vector ,(expand-qq (vector->list e))))
+    ((or (null? e) (symbol? e)) `',e)
+    (else e))))
 
 (define ^quote?
   (lambda (tag)
     (lambda (e)
       (and (pair? e)
-         (eq? (car e) tag)
-         (pair? (cdr e))
-        (null? (cddr e))))))
+     (eq? (car e) tag)
+     (pair? (cdr e))
+     (null? (cddr e))))))
 
 (define unquote? (^quote? 'unquote))
 (define unquote-splicing? (^quote? 'unquote-splicing))
+
 
 
 (define simpleConstant?
@@ -102,12 +103,15 @@
       (pattern-rule
      (? 'sexpr simpleConstant?)
      (lambda (sexpr) `(const ,sexpr)))
-
+; empty begin:
+  (pattern-rule
+    `(,(? 'exp begin?))
+    (lambda (exp) `(const ,(createVoid))))
 ;Quotes sexpr:
 
    (pattern-rule
      `(quote ,(? 'sexpr))
-     (lambda (sexpr) `("hello!")))
+     (lambda (sexpr) `(const ,sexpr)))
 
     
 ;Vector:
@@ -115,12 +119,7 @@
       (? 'v vector?)
      (lambda (sexpr) `(const ,sexpr)))
    
-; empty begin:
 
-  (pattern-rule
-    `(,(? 'exp begin?))
-    (lambda (exp) `(const ,(createVoid))))
-   
    
 ; -------------- Variables: --------------
    (pattern-rule
@@ -142,6 +141,19 @@
      (lambda (test doIfTrue doIfFalse)
        `(if3 ,(tag-parse test) ,(tag-parse doIfTrue)
          ,(tag-parse doIfFalse)))) 
+      
+        ; -------------- Sequences: --------------
+    ;begin:
+  (pattern-rule
+    `(begin ,(? 'sexpr) . ,(? 'otherSexpr))
+    (lambda (sexpr otherSexpr)
+      `(seq (,(tag-parse sexpr) ,@(map tag-parse otherSexpr)))))
+  ;set:
+  (pattern-rule
+    `(set! ,(? 'sexpr) . ,(? 'otherSexpr))
+    (lambda (sexpr otherSexpr)
+      `(seq (,(tag-parse sexpr) ,@(map tag-parse otherSexpr)))))
+
    
 ; -------------- Disjunctions: --------------
 
@@ -160,8 +172,8 @@
        ,(? 'expression) . ,(? 'more-expressions))
     (lambda (parameters expression more-expressions)
       (let ((newExpressions '()))
-        (if (and (null? more-expressions)
-                 (not (list? more-expressions)))
+        (if (null? more-expressions)
+                
           (set! newExpressions expression)
           (set! newExpressions
                 (append (list 'begin)
@@ -189,17 +201,6 @@
         (tag-parse (expandMitDefine variable value)))))
         
         
-  ; -------------- Sequences: --------------
-    ;begin:
-  (pattern-rule
-    `(begin ,(? 'sexpr) . ,(? 'otherSexpr))
-    (lambda (sexpr otherSexpr)
-      `(seq (,(tag-parse sexpr) ,@(map tag-parse otherSexpr)))))
-  ;set:
-  (pattern-rule
-    `(set! ,(? 'sexpr) . ,(? 'otherSexpr))
-    (lambda (sexpr otherSexpr)
-      `(seq (,(tag-parse sexpr) ,@(map tag-parse otherSexpr)))))
 
   ; application
   (pattern-rule
@@ -220,6 +221,24 @@
       (tag-parse (expandLet pairs expressions moreExpressions))
       ))
   
+    ; let*:
+  (pattern-rule
+    `(let* () ,(? 'expression)
+        . ,(? 'expressions list?))
+    (lambda (expression expressions)
+      (tag-parse (expandEmptyLet* (cons expression expressions)))))
+  (pattern-rule
+    `(let* ((,(? 'variable variable?)
+                ,(? 'value)) . ,(? 'others)) . ,(? 'expressions))
+    (lambda (variable value others expressions)
+      (tag-parse (expandLet* variable value others expressions))))
+  
+; Letrec:
+  (pattern-rule
+    `(letrec ,(? 'listOfVarsAndVals) . ,(? 'expressions))
+    (lambda (listOfVarsAndVals expressions)
+      (tag-parse (expandLetrec listOfVarsAndVals (car expressions)))))
+  
 ; And:
   (pattern-rule
     `(and . ,(? 'expressions))
@@ -227,17 +246,40 @@
 
 ; Cond:
 (pattern-rule
-  `(cond ,(? 'first) . ,(? 'rest))
-  (lambda (first rest)
-    (tag-parse (expandCond first rest))))
+  `(cond ,(? 'first) . ,(? 'others))
+  (lambda (first others)
+    (tag-parse (expandCond first others))))
 
 
 
+
+
+
+; Quasiquote:
+(pattern-rule
+  `(quasiquote . ,(? 'expression))
+  (lambda (expression)
+    (if (and 
+          (not (null? expression))
+          (= (length expression) 1)
+          )
+      (expand-qq (car expression))
+      (error 'quasiqoute "quasiquote got wrong parameters"))))
+
+; Un-quote:
+(pattern-rule
+  `(unquote . ,(? 'expression))
+  (lambda (expression) (tag-parse
+      (expand-qq expression))))
+
+; Unquote-splicing
+(pattern-rule
+  `(unquote-splicing ,(? 'expression))
+  (lambda (expression) (tag-parse
+      (expand-qq expression))))
 
   
   
-
-
 
 
 
@@ -251,11 +293,31 @@
                        (format "Failed to parse input: ~s" sexpr)))))))
 
 
-
-
-
-
 ; -------------------------- Macro-Expansions ----------------------
+(define expandLetrec
+  (lambda (lista . expressions)
+    (let* ((first (map car lista))
+         (lambdaExpressions (map cdr lista))
+         (newFirst `(,@first))
+         (bodyFunction `(lambda ,newFirst ,@expressions))
+         (afterApplies (map (lambda (lambdaExpressions) `(lambda ,newFirst ,@lambdaExpressions)) lambdaExpressions)))
+      (if (isValidList? first)
+        `(letrecFunction ,bodyFunction ,@afterApplies)
+        (error 'letrec "All variables must be different.")))))
+
+(define expandLet*
+  (lambda (variable value others expressions)
+    (if (or (null? others) (and (list? others) (null? others)))
+      `(let ((,variable ,value)) . ,expressions)
+      `(let ((,variable ,value)) (let* ,others . ,expressions)))))
+        
+(define expandEmptyLet*
+  (lambda (expressions)
+    (if (and (list? expressions)
+             (null? expressions)
+             )
+        (error 'letrec "empty list - error."))
+    `(begin ,@expressions)))
 
   (define expandCond
   (lambda (firstExp restExp)
@@ -303,7 +365,11 @@
         )
       `(define ,function (lambda ,parameters ,value)))))
 
- (tag-parse '(cond ((= 1 1) a)
-                   ((= 3 3) b)
-                   ((= 1 5) c)
-                   (else bob)))
+(define a 3)
+
+(tag-parse `(letrec ((a 1)
+       (b (+ a 1))
+       (c (+ a a))
+       (d (* a a)))
+    (set-car! x a)
+    a))

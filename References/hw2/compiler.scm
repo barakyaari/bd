@@ -254,10 +254,4 @@
 					e1
 					`(if ,v1 ,e1))
 				`(if ,v1 ,e1 ,(expand-cond (car rest) (cdr rest)))))))
-				
- (parse '(let (
-                   (a 5)
-                   (b 6)
-                   )
-               (+ a b)))
 
