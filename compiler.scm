@@ -1,5 +1,31 @@
 (load "pattern-matcher.scm")
 ; --------------------------- Helpers ------------------------------
+(define expand-qq
+  (lambda (e)
+    (cond ((unquote? e) (cadr e))
+        ((unquote-splicing? e)
+          (error 'expand-qq "unquote-splicing here makes no sense!"))
+        ((pair? e)
+          (let ((a (car e))
+              (b (cdr e)))
+            (cond ((unquote-splicing? a) `(append ,(cadr a) ,(expand-qq b)))
+                ((unquote-splicing? b) `(cons ,(expand-qq a) ,(cadr b)))
+                (else `(cons ,(expand-qq a) ,(expand-qq b))))))
+        ((vector? e) `(list->vector ,(expand-qq (vector->list e))))
+        ((or (null? e) (symbol? e)) `',e)
+        (else e))))
+
+(define ^quote?
+  (lambda (tag)
+    (lambda (e)
+      (and (pair? e)
+         (eq? (car e) tag)
+         (pair? (cdr e))
+        (null? (cddr e))))))
+
+(define unquote? (^quote? 'unquote))
+(define unquote-splicing? (^quote? 'unquote-splicing))
+
 
 (define simpleConstant?
   (lambda (sexpr)
@@ -186,9 +212,6 @@
 
 
 
-
-
-
 ; -------------------------- Macro-Expanding-Special-Forms ----------------------
 ;let:
   (pattern-rule
@@ -202,8 +225,15 @@
     `(and . ,(? 'expressions))
        (lambda (expressions) (tag-parse (expandAnd expressions))))
 
-  
-  
+; Cond:
+(pattern-rule
+  `(cond ,(? 'first) . ,(? 'rest))
+  (lambda (first rest)
+    (tag-parse (expandCond first rest))))
+
+
+
+
   
   
 
@@ -227,7 +257,20 @@
 
 ; -------------------------- Macro-Expansions ----------------------
 
-
+  (define expandCond
+  (lambda (firstExp restExp)
+    (let ((variable1 (car firstExp))
+        (expression1 (cdr firstExp)))
+      (if (and (> (length expression1) 1) (not (null? expression1)))
+        (set! expression1 
+              (append (list 'begin) (cdr firstExp)))
+        (set! expression1 
+              (car expression1)))
+      (if (null? restExp)
+        (if (eq? variable1 'else)
+          expression1
+          `(if ,variable1 ,expression1))
+        `(if ,variable1 ,expression1 ,(expandCond (car restExp) (cdr restExp)))))))
 
 ;Expand and:
 (define expandAnd
@@ -257,8 +300,10 @@
     (let ((function (car variable))
         (parameters (cdr variable))
         (vars (cdr variable))
-        
         )
       `(define ,function (lambda ,parameters ,value)))))
 
- (tag-parse '(and (= 1 1) (= 3 3) (= 1 1)))
+ (tag-parse '(cond ((= 1 1) a)
+                   ((= 3 3) b)
+                   ((= 1 5) c)
+                   (else bob)))
