@@ -305,6 +305,16 @@
         `(letrecFunction ,bodyFunction ,@afterApplies)
         (error 'letrec "All variables must be different.")))))
 
+(define expandLetrec2
+  (lambda (lista . expressions)
+    (let* ((first (map car lista))
+         (lambdaExpressions (map cdr lista))
+         (newFirst `(,@first))
+         (bodyFunction `(lambda ,newFirst ,@expressions)))
+      (if (isValidList? first)
+        `(letrecFunction ,bodyFunction)
+        (error 'letrec "Test - for debugging.")))))
+
 (define expandLet*
   (lambda (variable value others expressions)
     (if (or (null? others) (and (list? others) (null? others)))
@@ -367,9 +377,4 @@
 
 (define a 3)
 
-(tag-parse `(letrec ((a 1)
-       (b (+ a 1))
-       (c (+ a a))
-       (d (* a a)))
-    (set-car! x a)
-    a))
+(tag-parse '(* (+ 2 3 4) (+ 2 3 4)))
