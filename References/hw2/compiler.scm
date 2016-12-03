@@ -67,9 +67,9 @@
 				 (valid-list? (cdr lst))))))
 
 				 
-;;;;;;;;;;;;;;;;;; parser ;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;; parse2r ;;;;;;;;;;;;;;;;;;
 				 
-(define parse
+(define parse2
 	(let ((run (compose-patterns
 					(pattern-rule
 						(? 'e null?)
@@ -92,22 +92,22 @@
 					(pattern-rule
 						`(if ,(? 'test) ,(? 'dit))
 						(lambda (test dit)
-							`(if3 ,(parse test) ,(parse dit) (const ,(make-void)))))
+							`(if3 ,(parse2 test) ,(parse2 dit) (const ,(make-void)))))
 					; if with dif
 					(pattern-rule
 						`(if ,(? 'test) ,(? 'dit) ,(? 'dif))
 						(lambda (test dit dif)
-							`(if3 ,(parse test) ,(parse dit) ,(parse dif))))
+							`(if3 ,(parse2 test) ,(parse2 dit) ,(parse2 dif))))
 					; sequence 
 					(pattern-rule
 						`(begin ,(? 'expr) . ,(? 'rest-exprs))
 						(lambda (expr rest-exprs)
-							`(seq (,(parse expr) ,@(map parse rest-exprs)))))
+							`(seq (,(parse2 expr) ,@(map parse2 rest-exprs)))))
 					; sequence 
 					(pattern-rule
 						`(set! ,(? 'expr) . ,(? 'rest-exprs))
 						(lambda (expr rest-exprs)
-							`(seq (,(parse expr) ,@(map parse rest-exprs)))))
+							`(seq (,(parse2 expr) ,@(map parse2 rest-exprs)))))
 					; lambda
 					(pattern-rule
 						`(lambda ,(? 'params) ,(? 'expr) . ,(? 'rest-exprs))
@@ -118,13 +118,13 @@
 									(set! new-exprs (append (list 'begin) (list expr) rest-exprs)))
 								(cond ((list? params)
 										`(lambda-simple ,params
-											,(parse new-exprs)))
+											,(parse2 new-exprs)))
 									  ((pair? params)
 										`(lambda-opt ,(get-required-param params) ,(get-rest-param params)
-											,(parse new-exprs)))
+											,(parse2 new-exprs)))
 									  (else
 										`(lambda-variadic ,params
-											,(parse new-exprs)))))))
+											,(parse2 new-exprs)))))))
 					
 					; define
 					(pattern-rule
@@ -132,50 +132,50 @@
 						(lambda (var val)
 							(if (symbol? var)
 								; regular define
-								`(define ,(parse var) ,(parse val))
+								`(define ,(parse2 var) ,(parse2 val))
 								; MIT-style define
-								(parse (expand-MIT-define var val)))))
+								(parse2 (expand-MIT-define var val)))))
 					; application
 					(pattern-rule
 						`(,(? 'foo not-reserved?) . ,(? 'args))
 						(lambda (foo args)
-							`(applic ,(parse foo) (,@(map parse args)))))
+							`(applic ,(parse2 foo) (,@(map parse2 args)))))
 					; let
 					(pattern-rule
 						`(let ,(? 'varval) ,(? 'expr) . ,(? 'rest-exprs))
 						(lambda (varval expr rest-exprs)
-							(parse (expand-let varval expr rest-exprs))
+							(parse2 (expand-let varval expr rest-exprs))
 							))
 					; let*
 					(pattern-rule
 						`(let* () ,(? 'expr) . ,(? 'exprs list?))
 						(lambda (expr exprs)
-							(parse (expand-empty-let* (cons expr exprs)))))
+							(parse2 (expand-empty-let* (cons expr exprs)))))
 					(pattern-rule
 						`(let* ((,(? 'var var?) ,(? 'val)) . ,(? 'rest)) . ,(? 'exprs))
 						(lambda (var val rest exprs)
-							(parse (expand-let* var val rest exprs))))
+							(parse2 (expand-let* var val rest exprs))))
 					;letrec
 					(pattern-rule
 						`(letrec ,(? 'varvals) . ,(? 'exprs))
 						(lambda (varvals exprs)
-							(parse (expand-letrec varvals (car exprs)))))
+							(parse2 (expand-letrec varvals (car exprs)))))
 					; and
 					(pattern-rule
 						`(and . ,(? 'exprs))
-						(lambda (exprs) (parse (expand-and exprs))))
+						(lambda (exprs) (parse2 (expand-and exprs))))
 					; or
 					(pattern-rule
 						`(or . ,(? 'exprs))
-						(lambda (exprs) `(or ,(map parse exprs))))
+						(lambda (exprs) `(or ,(map parse2 exprs))))
 					; cond
 					(pattern-rule
 						`(cond ,(? 'first-case) . ,(? 'rest-cases))
-						(lambda (first-case rest-cases) (parse (expand-cond first-case rest-cases))))
+						(lambda (first-case rest-cases) (parse2 (expand-cond first-case rest-cases))))
 					; not
 					(pattern-rule
 						`(not ,(? 'expr))
-						(lambda (expr) `(not ,(parse expr))))
+						(lambda (expr) `(not ,(parse2 expr))))
 					; quasiqoute
 					(pattern-rule
 						`(quasiquote . ,(? 'e))
@@ -186,16 +186,16 @@
 					; unqoute
 					(pattern-rule
 						`(unquote . ,(? 'e))
-						(lambda (e) (parse (expand-qq e))))
+						(lambda (e) (parse2 (expand-qq e))))
 					; unqoute-splicing
 					(pattern-rule
 						`(unquote-splicing ,(? 'e))
-						(lambda (e) (parse (expand-qq e))))
+						(lambda (e) (parse2 (expand-qq e))))
 					)))
 		(lambda (e)
 			(run e
 				(lambda ()
-					(error 'parse (format "I can't recognize this: ~s" e)))))))
+					(error 'parse2 (format "I can't recognize this: ~s" e)))))))
 
 					
 ;;;;;;;;;;;;;;; Macro Expansions ;;;;;;;;;;;;;;;

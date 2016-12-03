@@ -354,20 +354,12 @@
   (lambda (expression) (tag-parse
       (expand-qq expression))))
 
-  
-  
-
-
-
-
-
 ;Final:
     )))
  (lambda (sexpr)
  (run sexpr (lambda ()
                 (error 'tag-parse 
                        (format "Failed to parse input: ~s" sexpr)))))))
-
 
 ; -------------------------- Macro-Expansions ----------------------
 (define expandLetrec
@@ -378,7 +370,7 @@
          (bodyFunction `(lambda ,newFirst ,@expressions))
          (afterApplies (map (lambda (lambdaExpressions) `(lambda ,newFirst ,@lambdaExpressions)) lambdaExpressions)))
       (if (isValidList? first)
-        `((lambda() ,bodyFunction ,@afterApplies))
+        `(seq (,bodyFunction ,@afterApplies))
         (error 'letrec "All variables must be different.")))))
 
 (define expandLetrec2
