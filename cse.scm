@@ -15,64 +15,6 @@
        			(car lista)
 				 (containsDouble? (cdr lista)))))))
 
-
-(define *reserved-words*
-'(and begin cond define do else if lambda
-    let let* letrec or quasiquote unquote
-      unquote-splicing quote set!))
-
-
-(define notReserved?
-  (lambda (sexpr)
-    (not (member sexpr *reserved-words*))))
-
-(define variable?
-  (lambda (sexpr)
-    (and (not (member sexpr *reserved-words*))
-         (symbol? sexpr)
-         )))
-
-(define builder
-  (lambda (pairOfBodyAndArgList)
-  	    (let ((body (car pairOfBodyAndArgList))
-             (argList (cdr pairOfBodyAndArgList))
-             )
-
-       body)
-    ))
-
-(define basicBuilder
-  (lambda (function arguments)
-
-       (builder (cons arguments '()))
-    ))
-
-
-
-(define cse
- (let 
-    ((run
- (compose-patterns
-
-   ; Application:
-     (pattern-rule
-    `(,(? 'function
-          (lambda (reserved?)
-               (not (member reserved? *reserved-words*))))
-          . ,(? 'arguments))
-    (lambda (function arguments)
-      (basicBuilder function arguments)
-      ))
-
-      
-      
-          )))
- (lambda (sexpr)
- (run sexpr (lambda ()
-                (error 'tag-parse 
-                       (format "Failed to parse input: ~s" sexpr)))))))
-
-
 (define isSimpleList
   (lambda (expr)
     (if (not (list? expr))
