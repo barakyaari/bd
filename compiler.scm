@@ -100,8 +100,13 @@
       (optimize-qq-expansion
        (expand-qq e)))))
 
-
-
+(define makeBegin
+  (lambda (exp)
+    (cond
+      ((null? (cdr exp)) (car exp))
+      ((null? exp) *void-object*)
+      (else 
+        `(begin ,@exp)))))
 
 (define simpleConstant?
   (lambda (sexpr)
@@ -162,8 +167,24 @@
       (and (not (member (car lista) (cdr lista)))
          (isValidList? (cdr lista))))))
 
-; ------------------------ Tag parser --------------------------------
+(define getValues
+  (lambda (lista)
+    (map cadr lista)))
 
+(define getVariables
+  (lambda (variable lista)
+    (let ((variables (cons variable (map car lista))))
+      (if (not (isValidList? variables))
+         (error 'let "Variables must all be different")
+        variables))))
+
+(define isLetVariableList?
+  (lambda (lista)
+    (and (list? lista) (andmap 
+      (lambda (values) (and (equal? (length values) 2) (pair? values)))
+       lista))))
+
+; ------------------------ Tag parser --------------------------------
 
 (define tag-parse
  (let 
@@ -187,15 +208,12 @@
    (pattern-rule
      `(quote ,(? 'sexpr))
      (lambda (sexpr) `(const ,sexpr)))
-
     
 ;Vector:
    (pattern-rule
       (? 'v vector?)
      (lambda (sexpr) `(const ,sexpr)))
-   
-
-   
+      
 ; -------------- Variables: --------------
    (pattern-rule
       (? 'v variable?)
@@ -232,7 +250,6 @@
     `(set! ,(? 'sexpr) . ,(? 'otherSexpr))
     (lambda (sexpr otherSexpr)
       `(set ,(tag-parse sexpr) ,@(map tag-parse otherSexpr))))
-
    
 ; -------------- Disjunctions: --------------
 
@@ -316,11 +333,37 @@
     (lambda (variable value others expressions)
       (tag-parse (expandLet* variable value others expressions))))
   
-; Letrec:
+  ;Letrec:
   (pattern-rule
-    `(letrec ,(? 'listOfVarsAndVals) . ,(? 'expressions))
-    (lambda (listOfVarsAndVals expressions)
-      (tag-parse (expandLetrec listOfVarsAndVals (car expressions)))))
+    `(letrec ((,(? 'variable variable?) ,(? 'value)) . ,(? 'others isLetVariableList?)) . ,(? 'expressions))
+    (lambda (variable value others expressions)
+      (let* (
+         (emptyList (list))
+          (variables (getVariables variable others))
+          (values (cons value (getValues others)))
+          (pairs (map (lambda (variable2 value2)
+                    `(set! ,variable2 ,value2))
+                     variables values))
+
+          (nonVars (map (lambda (value) '#f) values)))
+        (tag-parse
+          `((lambda (,@variables)
+            ,(makeBegin 
+              `(,@pairs ((lambda () ,@expressions) ,@emptyList))  
+            )) 
+            ,@nonVars
+          )))))
+  
+;Letrec empty:
+  (pattern-rule
+    `(letrec ,(? 'vars list? null?) ,(? 'expression) . ,(? 'expressions list?))
+      (lambda (variables expression expressions) 
+        (tag-parse
+          `((lambda ()
+              ((lambda () ,(makeBegin (cons expression expressions)))
+               ,@variables)) 
+            ,@variables)
+          )))
   
 ; And:
   (pattern-rule
@@ -441,4 +484,4 @@
 
 (define a 3)
 
-(tag-parse '(* (+ 2 3 4) (+ 2 3 4)))
+(tag-parse '(letrec ((x 1) (y 2)) b1 b2))
