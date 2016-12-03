@@ -135,28 +135,27 @@
         (generateListOfPairsAndExpression (cons (append pairs pair) (swapInList toSwap generated body))))
     (cons pairs body)))))
 
-(define printListOfPairs
-  (lambda (pairs)
-    (display "Pairs:\n")
-    (display pairs)
-    (newline)
-    pairs))
 
 (define cse
   (lambda (exp)
     (let* (
            (pair (generateListOfPairsAndExpression (cons '() exp)))
            (body (cdr pair))
-           (pairs (printListOfPairs (car pair))))
+           (pairs  (car pair)))
       
       `(let*
          (,pairs)
          ,body))))
 
 
- (cse '(* (+ 2 3 4) (+ 2 3 4) (1 2) (1 2)))
- 
- (newline)
+(cse '(list (cons 'a 'b)
+(cons 'a 'b)
+(list (cons 'a 'b)
+(cons 'a 'b))
+(list (list (cons 'a 'b)
+(cons 'a 'b)))))
+
+
  
 
  
