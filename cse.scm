@@ -26,7 +26,6 @@
               expr)
   ))))
 
-
 (define getSimpleLists
   (lambda (expr)
     (if (not (list? expr))
@@ -57,7 +56,6 @@
         (cons (swapInList old new (car lista))
               (swapInList old new (cdr lista))))))))
 
-
 (define hasDoubleSimpleList
   (lambda (expr)
     (if (= (length (getFirstDoubleSimpleList expr)) 0)
@@ -77,7 +75,6 @@
         (generateListOfPairsAndExpression (cons (append pairs pair) (swapInList toSwap generated body))))
     (cons pairs body)))))
 
-
 (define cse
   (lambda (exp)
     (let* (
@@ -90,12 +87,10 @@
          ,body))))
 
 
-(cse '(list (cons 'a 'b)
-(cons 'a 'b)
-(list (cons 'a 'b)
-(cons 'a 'b))
-(list (list (cons 'a 'b)
-(cons 'a 'b)))))
+(cse '(+ (* (- x y) (* x x))
+(* x x)
+(foo (- x y))
+(goo (* (- x y) (* x x)))))
 
 
  
