@@ -19,9 +19,9 @@
 			(cond ((equal? my-res staff-res)
 				(display "\033[1;32mSuccess! ☺ \033[0m ") (newline) #t)
 				(else (display "\033[1;31mFailed! ☹\033[0m ") 
-					(display ", expected: ")					
+					(display ", \nexpected: ")					
 					(display staff-res)
-					(display ", actual:")
+					(display ", \nactual:   ")
 					(display my-res)
 					(newline)
 					#f))
@@ -269,6 +269,7 @@
 (define bdTests
   (list
     'hello
+    '(letrec () body)
 ))
 
 (runAllTests

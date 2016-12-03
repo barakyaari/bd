@@ -222,12 +222,16 @@
   (pattern-rule
     `(begin ,(? 'sexpr) . ,(? 'otherSexpr))
     (lambda (sexpr otherSexpr)
-      `(seq (,(tag-parse sexpr) ,@(map tag-parse otherSexpr)))))
+      (if (null? otherSexpr)
+      `,(tag-parse sexpr)
+      
+        `(seq (,(tag-parse sexpr) ,@(map tag-parse otherSexpr)))
+      )))
   ;set:
   (pattern-rule
     `(set! ,(? 'sexpr) . ,(? 'otherSexpr))
     (lambda (sexpr otherSexpr)
-      `(seq (,(tag-parse sexpr) ,@(map tag-parse otherSexpr)))))
+      `(set ,(tag-parse sexpr) ,@(map tag-parse otherSexpr))))
 
    
 ; -------------- Disjunctions: --------------
@@ -275,9 +279,9 @@
     `(define ,(? 'variable) ,(? 'value))
     (lambda (variable value)
       (if (symbol? variable)
-        `(define ,(tag-parse variable) ,(tag-parse value))   
+        `(def ,(tag-parse variable) ,(tag-parse value))   
           ; Mit define:
-        (tag-parse (expandMitDefine variable value)))))
+        `,(tag-parse (expandMitDefine variable value)))))
         
         
 
@@ -332,21 +336,11 @@
   (lambda (first others)
     (tag-parse (expandCond first others))))
 
-
-
-
-
-
 ; Quasiquote:
 (pattern-rule
   `(quasiquote . ,(? 'expression))
   (lambda (expression)
-    (if (and 
-          (not (null? expression))
-          (= (length expression) 1)
-          )
-      (expand-qq (car expression))
-      (error 'quasiqoute "quasiquote got wrong parameters"))))
+    `,(tag-parse (expand-qq (car expression)))))
 
 ; Un-quote:
 (pattern-rule
@@ -384,7 +378,7 @@
          (bodyFunction `(lambda ,newFirst ,@expressions))
          (afterApplies (map (lambda (lambdaExpressions) `(lambda ,newFirst ,@lambdaExpressions)) lambdaExpressions)))
       (if (isValidList? first)
-        `(letrecFunction ,bodyFunction ,@afterApplies)
+        `((lambda() ,bodyFunction ,@afterApplies))
         (error 'letrec "All variables must be different.")))))
 
 (define expandLetrec2
@@ -399,17 +393,17 @@
 
 (define expandLet*
   (lambda (variable value others expressions)
-    (if (or (null? others) (and (list? others) (null? others)))
+    (if (null? others) 
       `(let ((,variable ,value)) . ,expressions)
       `(let ((,variable ,value)) (let* ,others . ,expressions)))))
         
 (define expandEmptyLet*
   (lambda (expressions)
-    (if (and (list? expressions)
-             (null? expressions)
-             )
-        (error 'letrec "empty list - error."))
-    `(begin ,@expressions)))
+    (display "Parsing empty let\n")
+        (display expressions)
+    (display "\n")
+
+    `((lambda () ,@expressions))))
 
   (define expandCond
   (lambda (firstExp restExp)
@@ -434,20 +428,16 @@
         ((eq? (length exressions) 1) (car exressions))
         (else `(if ,(car exressions) (and ,@(cdr exressions)) #f)))))
 
-
-
 (define expandLet
   (lambda (pairs expressions moreExpressions)
     (let ((variables (map car pairs))
         (values (map cadr pairs))
         (expressions (append (list expressions) moreExpressions))
-        (sexprs (car pairs)) ;for debug, don't forget to delete.
         )
         
       (if (isValidList? variables)
         `((lambda ,variables ,@expressions) ,@values)
         (error 'let "All variables must be different.")))))
-
 
 (define expandMitDefine
   (lambda (variable value)
