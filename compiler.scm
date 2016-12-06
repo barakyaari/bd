@@ -161,11 +161,12 @@
       
 (define isValidList?
   (lambda (lista)
-    (if (and (null? lista)
-             )
-      #t
+    (if(null? lista) 
+        #t
+        (if (not (list? lista))
+            #t
       (and (not (member (car lista) (cdr lista)))
-         (isValidList? (cdr lista))))))
+         (isValidList? (cdr lista)))))))
 
 (define getValues
   (lambda (lista)
@@ -268,7 +269,7 @@
 ; Lambda:
   (pattern-rule
     `(lambda 
-       ,(? 'parameters)
+       ,(? 'parameters isValidList?)
        ,(? 'expression) . ,(? 'more-expressions))
     (lambda (parameters expression more-expressions)
       (let ((newExpressions '()))
@@ -279,7 +280,7 @@
                 (append (list 'begin)
                    (list expression) more-expressions)))
         (cond ((list? parameters)
-            `(lambda-simple ,parameters
+                   `(lambda-simple ,parameters
               ,(tag-parse newExpressions)))
             ((pair? parameters)
             `(lambda-opt ,(getRequiredParameters parameters) ,(getRestOfParameters parameters)
@@ -288,15 +289,19 @@
             `(lambda-var ,parameters
               ,(tag-parse newExpressions)))))))
   
-  
-  
   ; -------------- Define: --------------
   
   (pattern-rule
-    `(define ,(? 'variable) ,(? 'value))
-    (lambda (variable value)
+    `(define ,(? 'variable) ,(? 'value) . ,(? 'moreValues))
+    (lambda (variable value moreValues)
       (if (symbol? variable)
-        `(def ,(tag-parse variable) ,(tag-parse value))   
+          (let ((newValue '()))
+            (if (null? moreValues)
+                (set! newValue value)
+                (set! newValue
+                (append (list 'begin)
+                   (list value) moreValues)))
+        `(def ,(tag-parse variable) ,(tag-parse newValue)))   
           ; Mit define:
         `,(tag-parse (expandMitDefine variable value)))))
         
@@ -484,4 +489,4 @@
 
 (define a 3)
 
-(tag-parse '(letrec ((x 1) (y 2)) b1 b2))
+(tag-parse '(lambda (a b c b) (d e r)))
