@@ -1,5 +1,13 @@
 (load "pattern-matcher.scm")
 ; --------------------------- Helpers ------------------------------
+
+(define makeBegin
+  (lambda (exp)
+    (cond
+      ((null? exp) (void))
+      ((null? (cdr exp)) (car exp))
+      (else `(begin ,@exp)))))
+
 ; ---------------Meirs Expand-qq-------------------
 (define ^quote?
   (lambda (tag)
@@ -290,23 +298,18 @@
               ,(tag-parse newExpressions)))))))
   
   ; -------------- Define: --------------
-  
   (pattern-rule
-    `(define ,(? 'variable) ,(? 'value) . ,(? 'moreValues))
-    (lambda (variable value moreValues)
-      (if (symbol? variable)
-          (let ((newValue '()))
-            (if (null? moreValues)
-                (set! newValue value)
-                (set! newValue
-                (append (list 'begin)
-                   (list value) moreValues)))
-        `(def ,(tag-parse variable) ,(tag-parse newValue)))   
-          ; Mit define:
-        `,(tag-parse (expandMitDefine variable value)))))
-        
-        
-
+    `(define ,(? 'variables)  ,(? 'expressions) . ,(? 'others))
+    (lambda (variables expressions others) 
+    
+    (if 
+      (and (pair? variables) 
+           #t)
+       (tag-parse (expandMitDefine variables (makeBegin (cons expressions others))))
+       
+      `(def ,(tag-parse variables) ,(tag-parse (makeBegin (cons expressions others))))))
+  )
+  
   ; application
   (pattern-rule
     `(,(? 'function 
@@ -479,14 +482,9 @@
         `((lambda ,variables ,@expressions) ,@values)
         (error 'let "All variables must be different.")))))
 
-(define expandMitDefine
-  (lambda (variable value)
-    (let ((function (car variable))
-        (parameters (cdr variable))
-        (vars (cdr variable))
-        )
-      `(define ,function (lambda ,parameters ,value)))))
+  (define expandMitDefine
+    (lambda (variables expressions)
+    `(define ,(car variables) 
+       (lambda ,(cdr variables) ,expressions))))
 
-(define a 3)
-
-(tag-parse '(lambda (a b c b) (d e r)))
+(tag-parse '(define (foo x y . z) (if x y z) #t))
