@@ -29,26 +29,27 @@
 			
 (define runTests
   (lambda (tests-name lst)
-	(newline)
-	(display tests-name)
-	(display ":")
-	(newline)
-	(display "=============")
-	(newline)
-	(let ((results (map testVSstaff lst)))
-	(newline)
-	(cond ((andmap (lambda (exp) (equal? exp #t)) results)		
-		(display "\033[1;32m") (display tests-name) (display " Tests: SUCCESS! ☺ \033[0m\n") (newline) #t)
-		(else (display "\033[1;31m") (display tests-name) (display " Tests: FAILED! ☹ \033[0m\n") (newline) #f)))
+  (newline)
+  (display tests-name)
+  (display ":")
+  (newline)
+  (display "=============")
+  (newline)
+  (let ((results (map testVSstaff lst)))
+  (newline)
+  (cond ((andmap (lambda (exp) (equal? exp #t)) results)  
+    (display (format "\033[1;32m~s Tests: SUCCESS! ☺ \033[0m\n \n" tests-name)) #t)   
+    (else
+    (display (format "\033[1;31m~s Tests: FAILED! ☹ \033[0m\n \n" tests-name)) #f)))
 ))
 
 (define runAllTests
   (lambda (lst)
     (let ((results (map (lambda (test) (runTests (car test) (cdr test))) lst)))
-      	(cond ((andmap (lambda (exp) (equal? exp #t)) results)		
-		(display "\033[1;32m !!!!!  ☺  ALL TESTS SUCCEEDED  ☺  !!!!\033[0m\n"))
-		(else (display "\033[1;31m #####  ☹  SOME TESTS FAILED  ☹  #####\033[0m\n")))
-		(newline))
+        (cond ((andmap (lambda (exp) (equal? exp #t)) results)    
+    (display "\033[1;32m !!!!!  ☺  ALL TESTS SUCCEEDED  ☺  !!!!\033[0m\n"))
+    (else (display "\033[1;31m #####  ☹  SOME TESTS FAILED  ☹  #####\033[0m\n")))
+    (newline))
 ))
 
 (define ifTests
@@ -63,8 +64,7 @@
 
 (define condTests
   (list
-     ;without sequences
-     `(cond)
+     ;without sequences     
      `(cond (x 1))
      `(cond (x 1) (c 12))
      `(cond (x 1) (b 2) (c 3))
@@ -75,6 +75,7 @@
      `(cond (x 1 2 abc1) (b #f) (c (or 1 2) #t))
      `(cond (x 1 2 abc1) (b #f) (c (or 1 2) #t) (else #f))
      `(cond (x 1 2 abc1) (b #f) (c (or 1 2) #t) (else 112))
+     `(cond (x 1 2 abc1) (b #f) (c (or 1 2) #t) (else (display "I'm in Else") (f a b c)))
 ))
 
 (define orTests
@@ -86,11 +87,6 @@
     `(or (or "abc" '123) (if a b c))
     `(or 'shaham)
     `(or "naimark")
-    `(or "naimark" "bob")
-    `(or 'naimark 'bob)
-    `(or 'naimark "bob")
-    `(or 'naimark 12)
-        
 ))
 
 (define andTests
@@ -158,7 +154,7 @@
     '(lambda (exp rest) (or a b c) (if a 1 "abc"))
     '(lambda (a b c d e arg154) (if a 1 "abc"))
     '(lambda () (or 1))
-    '(lambda (Sym1 Symbol2 Symbol1234567890) (display "Akuna Matata"))
+    '(lambda (Sym1 Symbol2 Symbol1234567890) (display "Akuna Matata"))       
     
     ;lambda-opt
     '(lambda (x y . z) a)
@@ -176,11 +172,14 @@
     ;regular-define
     '(define x 5)
     '(define x (lambda (x) x))
+    '(define a b c d)
+    '(define a (b c d))
     
     ;mit-style-define
     '(define (id x) x)
+    '(define (id x) x y)
     '(define (foo x y z) (if x y z))
-    '(define (foo x y . z) (if x y z))
+    '(define (foo x y . z) (if x y z) #t)
     '(define (list . args) args)
 ))
 
@@ -189,6 +188,7 @@
     '(a)
     '(a b c)
     '((a b) (a c) (a d))
+    '((lambda (x y z . e) (e (f x y z123))))
 ))
 
 (define quasiquoteTests
@@ -198,7 +198,8 @@
     `(quasiquote (a ,b ,@c))    
     `(quasiquote (,@a ,b c))
     `(quasiquote (,@a ,@b ,@c))    
-    `(quasiquote (,a ,b ,c))    
+    `(quasiquote (,a ,b ,c))  
+    `(quasiquote (,a ,((f a) x) ,c))  
 ))
 
 (define beginTests
@@ -206,7 +207,13 @@
     '(begin)
     '(begin 1)
     '(begin (or 1 2 3))
-    '(begin (or 1 2) (if 1 2 3))    
+    '(begin (or 1 2) (if 1 2 3))   
+    '(begin (begin a b) a)
+    '(begin (begin a (begin c (begin d e f g))) a (a b c))
+    '(begin (begin a b c) (begin d e f) (begin e f) g)
+    '(begin (begin a c) b (begin d) g (begin e f) (or 1 2 3))
+    '(begin (if (if 1 2 3) (and 2 "a" #f) #t) (begin d e) (lambda args a b c) (begin e f) (or 1 2 3))
+    '(begin a (begin b (begin c (begin d e (begin f g h) "Akuna Matata"))))
 ))
 
 (define setTests
@@ -217,64 +224,66 @@
 
 (define parserTests
   '(4 
-	-3 
-	#t 
-	#f 
-	#\a 
-	#\A 
-	#\space 
-	#\tab
-	'3 
-	3 
-	'"abc" 
-	"abc" 
-	'#\a 
-	#\a 
-	''a 
-	''''''a
-	'abc 
-	abc 
-	'#(a b c) 
-	'#() 
-	'#(() 
-	(#()))
-	(a b c)
-	(if (zero? n) 1 (* n (fact (- n 1))))
-	(cond ((foo? x) foo-x)
-		((goo? x) goo-x)
-		((boo? x) boo-x)
-		(else poo-x))
-	(begin e1)
-	(begin e1 e2 e3)
-	(lambda a b c)
-	(lambda a b)
-	(lambda (a b . c) (list a b c))
-	(lambda (a b c) (list a b c))
-	(let ((a 1) (b 2) (c 3))
-	  (+ a b c))
-	(let* ((a 1)
-		   (a (+ a 1))
-		   (a (+ a a))
-		   (a (* a a)))
-	  (set-car! x a)
-	  a)
-	(define a 3)
-	(define a (lambda (x) x))
-	(define (fact n) (if (zero? n) 1 (* n (fact (- n 1)))))
-	(define (foo a b . c) (list a b c))
-	(define (foo . a) (list a))
-	(define (foo a b c) (list a b c))
+  -3 
+  #t 
+  #f 
+  #\a 
+  #\A 
+  #\space 
+  #\tab
+  '3 
+  3 
+  '"abc" 
+  "abc" 
+  '#\a 
+  #\a 
+  ''a 
+  ''''''a
+  'abc 
+  abc 
+  '#(a b c) 
+  '#() 
+  '#(() 
+  (#()))
+  (a b c)
+  (if (zero? n) 1 (* n (fact (- n 1))))
+  (cond ((foo? x) foo-x)
+    ((goo? x) goo-x)
+    ((boo? x) boo-x)
+    (else poo-x))
+  (begin e1)
+  (begin e1 e2 e3)
+  (lambda a b c)
+  (lambda a b)
+  (lambda (a b . c) (list a b c))
+  (lambda (a b c) (list a b c))
+  (let ((a 1) (b 2) (c 3))
+    (+ a b c))
+  (let* ((a 1)
+       (a (+ a 1))
+       (a (+ a a))
+       (a (* a a)))
+    (set-car! x a)
+    a)
+  (define a 3)
+  (define a (lambda (x) x))
+  (define (fact n) (if (zero? n) 1 (* n (fact (- n 1)))))
+  (define (foo a b . c) (list a b c))
+  (define (foo . a) (list a))
+  (define (foo a b c) (list a b c))
 ))
 
-(define bdTests
+(define negativeTests
   (list
-    'hello
-    '(letrec () body)
+    '(if)
+    '(cond)  
+    '(lambda (a b c a) (f x))
+    '(let ((AbC 5) (Sym123 "abc") (AbC 12)) (if (= AbC 12) #t (begin (display "WOW") #f)))
+    '(letrec ((AbC (lambda (x) (AbC x))) (Sym123 "abc") (AbC 12)) (if (= AbC 12) #t (begin (display "WOW") #f)))
 ))
 
 (runAllTests
   (list
-      (cons "BD tests" bdTests)     
       (cons "Lambda" lambdaTests)     
       (cons "Or" orTests)   
       (cons "And" andTests) 
@@ -289,4 +298,5 @@
       (cons "Application" applicationTests)    
       (cons "QuasiQuote" quasiquoteTests) 
       (cons "Parser" parserTests)
+      (cons "Negative" negativeTests)
 ))
