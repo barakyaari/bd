@@ -193,6 +193,30 @@
       (lambda (values) (and (equal? (length values) 2) (pair? values)))
        lista))))
 
+(define swapListItem
+  (lambda (exp old new)
+    (if (list? exp)
+        (if (null? exp)
+            '()
+            (append (list (swapListItem (car exp) old new))
+                    (swapListItem (cdr exp) old new)
+                    )
+            )
+        (if (equal? exp old)
+            new
+            exp)
+          )))
+
+(define contains?
+  (lambda (exp arg)
+    (if (list? exp)
+      (ormap (lambda (x)
+             (equal? x arg))
+           exp
+             )
+      #f)))
+  
+
 ; ------------------------ Tag parser --------------------------------
 
 (define tag-parse
@@ -246,14 +270,28 @@
       
         ; -------------- Sequences: --------------
     ;begin:
+    (pattern-rule
+    `(innerBegin ,(? 'sexpr) . ,(? 'otherSexpr))
+    (lambda (sexpr otherSexpr)
+      (if (null? otherSexpr)
+      (tag-parse sexpr)
+        (append (list (tag-parse sexpr)) (map tag-parse otherSexpr))
+      )))
+    
   (pattern-rule
     `(begin ,(? 'sexpr) . ,(? 'otherSexpr))
     (lambda (sexpr otherSexpr)
       (if (null? otherSexpr)
       `,(tag-parse sexpr)
-      
+      (if (contains? sexpr 'begin)
+        `(seq (,(tag-parse (swapListItem sexpr 'begin 'innerBegin)) 
+                 ,@(map tag-parse (swapListItem otherSexpr 'begin 'innerBegin))))
+        
+        
         `(seq (,(tag-parse sexpr) ,@(map tag-parse otherSexpr)))
-      )))
+      ))))
+  
+  
   ;set:
   (pattern-rule
     `(set! ,(? 'sexpr) . ,(? 'otherSexpr))
@@ -487,4 +525,6 @@
     `(define ,(car variables) 
        (lambda ,(cdr variables) ,expressions))))
 
-(tag-parse '(define (foo x y . z) (if x y z) #t))
+(tag-parse
+  '(begin (begin a (begin b (begin d e f g))) h (i j k))
+  )

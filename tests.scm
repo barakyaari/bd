@@ -284,8 +284,17 @@
     '(letrec ((AbC (lambda (x) (AbC x))) (Sym123 "abc") (AbC 12)) (if (= AbC 12) #t (begin (display "WOW") #f)))
 ))
 
+(define myTests
+  (list
+    '(begin (begin a b) c)
+    '(begin (begin a (begin b (begin d e f g))) h (i j k))
+    '(begin (begin a b c) (begin d e f) (begin e f) g)
+
+    ))
+
 (runAllTests
   (list
+      (cons "MyTests" myTests)     
       (cons "Lambda" lambdaTests)     
       (cons "Or" orTests)   
       (cons "And" andTests) 
