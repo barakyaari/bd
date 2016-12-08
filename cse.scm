@@ -15,17 +15,6 @@
        			(car lista)
 				 (containsDouble? (cdr lista)))))))
 
-(define const?
-  (lambda (x)
-    (if (list? x)
-        (if (> (length x) 1)
-            (if (equal? (car x) 'quote)
-            	#t
-            	#f)
-           	#f)
-          #t)
-    ))
-
 (define isSimpleList
   (lambda (expr)
     (if (not (list? expr))
@@ -33,13 +22,9 @@
         (if (= (length expr) 1)
             #f
     (andmap (lambda (x)
-              (const? x))
+              (not (list? x)))
               expr)
   ))))
-
-(define isQuoted
-  (lambda (arg)
-    #t))
 
 (define getSimpleLists
   (lambda (expr)
@@ -48,10 +33,7 @@
     (if (isSimpleList expr)
         (if (null? expr)
             '()
-            (if (equal? (car expr) 'quote)
-              '()
-            
-        `(,expr)))
+        `(,expr))
         
         `( ,@(getSimpleLists (car expr))
               ,@(getSimpleLists (cdr expr)))
@@ -82,14 +64,13 @@
 
 (define generateListOfPairsAndExpression
   (lambda (pairOfPairListAndExpression)
-    
   (let ((pairs (car pairOfPairListAndExpression))
         (body (cdr pairOfPairListAndExpression))
         )
     (if (hasDoubleSimpleList body)
-        (let* ((generated (string->symbol (symbol->string (gensym))))
+        (let* ((generated (gensym))
               (toSwap (getFirstDoubleSimpleList body))
-              (pair (list generated (car (list toSwap))))
+              (pair `(,toSwap ,generated))
               )
         (generateListOfPairsAndExpression (cons (append pairs pair) (swapInList toSwap generated body))))
     (cons pairs body)))))
@@ -102,25 +83,18 @@
            (pairs  (car pair)))
       
       `(let*
-         ,pairs
+         (,pairs)
          ,body))))
 
 
- (newline)
- (cse '(list (cons 'a 'b)
-(cons 'a 'b)
-(list (cons 'a 'b)
-(cons 'a 'b))
-(list (list (cons 'a 'b)
-(cons 'a 'b)))))
+(cse '(+ (* (- x y) (* x x))
+(* x x)
+(foo (- x y))
+(goo (* (- x y) (* x x)))))
 
-(newline)
+abcd
 
 
-(define lista '('a (a b c) c))
-(define term (car (cdr lista)))
-term
-(length term)
-(> (length term) 1)
-(const? term)
-(string->symbol (symbol->string (gensym)))
+ 
+
+ 
