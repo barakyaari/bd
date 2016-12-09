@@ -17,6 +17,7 @@
 
 (define const?
   (lambda (x)
+   
     (if (list? x)
         (if (> (length x) 1)
             (if (equal? (car x) 'quote)
@@ -30,12 +31,11 @@
   (lambda (expr)
     (if (not (list? expr))
         #f
-        (if (= (length expr) 1)
-            #f
+
     (andmap (lambda (x)
               (const? x))
               expr)
-  ))))
+  )))
 
 (define isQuoted
   (lambda (arg)
@@ -91,36 +91,27 @@
               (toSwap (getFirstDoubleSimpleList body))
               (pair (list generated (car (list toSwap))))
               )
-        (generateListOfPairsAndExpression (cons (append pairs pair) (swapInList toSwap generated body))))
+        (generateListOfPairsAndExpression (cons (append pairs (list pair)) (swapInList toSwap generated body))))
     (cons pairs body)))))
 
-(define cse
+(define cse2
   (lambda (exp)
     (let* (
            (pair (generateListOfPairsAndExpression (cons '() exp)))
            (body (cdr pair))
            (pairs  (car pair)))
-      
+      (if (null? pairs)
+          exp
+      (if (equal? (length pairs) 2)
+          
+      `(let
+         ,pairs
+         ,body)
+          
       `(let*
          ,pairs
-         ,body))))
+         ,body))))))
 
 
- (newline)
- (cse '(list (cons 'a 'b)
-(cons 'a 'b)
-(list (cons 'a 'b)
-(cons 'a 'b))
-(list (list (cons 'a 'b)
-(cons 'a 'b)))))
+(cse2 '(or naimark))
 
-(newline)
-
-
-(define lista '('a (a b c) c))
-(define term (car (cdr lista)))
-term
-(length term)
-(> (length term) 1)
-(const? term)
-(string->symbol (symbol->string (gensym)))

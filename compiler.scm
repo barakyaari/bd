@@ -215,7 +215,14 @@
            exp
              )
       #f)))
-  
+          
+  (define parseInnerBegin
+    (lambda (expressions)
+      (let ((exp (substq 'innerBegin 'begin expressions))
+            (applier (lambda (x)
+                (tag-parse x))))
+         (map applier exp)
+     )))
 
 ; ------------------------ Tag parser --------------------------------
 
@@ -275,8 +282,12 @@
     (lambda (sexpr otherSexpr)
       (if (null? otherSexpr)
       (tag-parse sexpr)
-        (append (list (tag-parse sexpr)) (map tag-parse otherSexpr))
-      )))
+          (let* (
+                 (expression (tag-parse sexpr))
+                 (others (map tag-parse otherSexpr))
+                 )
+        (cons expression others))
+                   )))
     
   (pattern-rule
     `(begin ,(? 'sexpr) . ,(? 'otherSexpr))
@@ -284,10 +295,12 @@
       (if (null? otherSexpr)
       `,(tag-parse sexpr)
       (if (contains? sexpr 'begin)
-        `(seq (,(tag-parse (swapListItem sexpr 'begin 'innerBegin)) 
-                 ,@(map tag-parse (swapListItem otherSexpr 'begin 'innerBegin))))
-        
-        
+          (let* (
+                 (expression (tag-parse (swapListItem sexpr 'begin 'innerBegin)))
+                 (others (map tag-parse (swapListItem otherSexpr 'begin 'innerBegin))))
+        (list 'seq expression others))
+          
+          
         `(seq (,(tag-parse sexpr) ,@(map tag-parse otherSexpr)))
       ))))
   
@@ -525,6 +538,10 @@
     `(define ,(car variables) 
        (lambda ,(cdr variables) ,expressions))))
 
-(tag-parse
-  '(begin (begin a (begin b (begin d e f g))) h (i j k))
+  (define value '((begin a (begin b (begin d e f g))) h (i j k)))
+  
+  (display "expected:\n")
+  (display "((var a) (var b) (var d) (var e) (var f) (var g) (var h) (applic (var i) ((var j) (var k))))\n")
+(parseInnerBegin
+  value
   )
