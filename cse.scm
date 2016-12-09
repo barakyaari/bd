@@ -1,19 +1,19 @@
 (load "pattern-matcher.scm")
 
 (define contains
-	(lambda (lst item)
-		(member item lst)
-			))
+  (lambda (lst item)
+    (member item lst)
+      ))
 
 (define containsDouble?
-	(lambda (lista)
-		(if (null? lista)
-			`()
-   			(if (not (list? (car lista)))
-          		(containsDouble? (cdr lista))
-			(if (contains (cdr lista) (car lista))
-       			(car lista)
-				 (containsDouble? (cdr lista)))))))
+  (lambda (lista)
+    (if (null? lista)
+      `()
+        (if (not (list? (car lista)))
+              (containsDouble? (cdr lista))
+      (if (contains (cdr lista) (car lista))
+            (car lista)
+         (containsDouble? (cdr lista)))))))
 
 (define const?
   (lambda (x)
@@ -21,9 +21,9 @@
     (if (list? x)
         (if (> (length x) 1)
             (if (equal? (car x) 'quote)
-            	#t
-            	#f)
-           	#f)
+              #t
+              #f)
+            #f)
           #t)
     ))
 
@@ -102,7 +102,7 @@
            (pairs  (car pair)))
       (if (null? pairs)
           exp
-      (if (equal? (length pairs) 2)
+      (if (equal? (length pairs) 1)
           
       `(let
          ,pairs
@@ -113,5 +113,7 @@
          ,body))))))
 
 
-(cse2 '(or naimark))
+(cse2 '(list '(a b)
+(list '(a b) '(c d))
+(list '(a b) '(c d))))
 
