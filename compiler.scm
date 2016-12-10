@@ -223,6 +223,19 @@
                 (tag-parse x))))
          (map applier exp)
      )))
+  
+  (define expressionWithoutSeq
+    (lambda (expression)
+      (if (null? expression)
+        '()
+        (if
+          (and (list? (car expression))
+                 (equal? 'seq (car (car expression))))
+          `(,@(car (cdr(car expression)))
+               ,@(expressionWithoutSeq (cdr expression)))
+          `(,(car expression) ,@(expressionWithoutSeq (cdr expression))))
+          )
+      ))
 
 ; ------------------------ Tag parser --------------------------------
 
@@ -290,21 +303,16 @@
                    )))
     
   (pattern-rule
-    `(begin ,(? 'sexpr) . ,(? 'otherSexpr))
-    (lambda (sexpr otherSexpr)
-      (if (null? otherSexpr)
-      `,(tag-parse sexpr)
-      (if (contains? sexpr 'begin)
-          (let* (
-                 (expression (tag-parse (swapListItem sexpr 'begin 'innerBegin)))
-                 (others (map tag-parse (swapListItem otherSexpr 'begin 'innerBegin))))
-        (list 'seq expression others))
-          
-          
-        `(seq (,(tag-parse sexpr) ,@(map tag-parse otherSexpr)))
-      ))))
-  
-  
+    `(begin . ,(? 'others))
+    (lambda (others) 
+      (cond ((null? others) 
+             `(const ,*void-object*))
+          ((equal? 1 (length others)) 
+           (tag-parse (car others)))
+          (else 
+            (let ((othersFixed others))
+                `(seq ,(expressionWithoutSeq (map tag-parse othersFixed))))))))
+
   ;set:
   (pattern-rule
     `(set! ,(? 'sexpr) . ,(? 'otherSexpr))
@@ -403,7 +411,6 @@
           (pairs (map (lambda (variable2 value2)
                     `(set! ,variable2 ,value2))
                      variables values))
-
           (nonVars (map (lambda (value) '#f) values)))
         (tag-parse
           `((lambda (,@variables)

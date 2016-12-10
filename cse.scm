@@ -37,10 +37,6 @@
               expr)
   )))
 
-(define isQuoted
-  (lambda (arg)
-    #t))
-
 (define getSimpleLists
   (lambda (expr)
     (if (not (list? expr))
@@ -67,12 +63,14 @@
     (if 
       (not (list? lista))
         lista
+        (if (const? lista)
+            lista
         (if (equal? lista old)
              new
         (if (null? lista)
             lista
         (cons (swapInList old new (car lista))
-              (swapInList old new (cdr lista))))))))
+              (swapInList old new (cdr lista)))))))))
 
 (define hasDoubleSimpleList
   (lambda (expr)
@@ -112,8 +110,4 @@
          ,pairs
          ,body))))))
 
-
-(cse2 '(list '(a b)
-(list '(a b) '(c d))
-(list '(a b) '(c d))))
 
