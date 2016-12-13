@@ -1,5 +1,24 @@
 (load "pattern-matcher.scm")
 
+  (define flatten
+   (lambda (lista)
+     (if (not (list? lista))
+         '()
+         (if (null? lista)
+             '()
+             (append
+             (if (list? (car lista))
+                 (flatten (car lista))
+                 (list (car lista)))
+                 (flatten (cdr lista))
+                           )
+                        )
+             )))
+ 
+ (define isBigger
+   (lambda (x y)
+     (> (length (flatten x)) (length (flatten y))))) 
+
 (define isSublistOfItem
   (lambda (exp toCheck)
     (if (equal? exp toCheck)
@@ -100,13 +119,17 @@
     )))
   )))
 
+(define getOrderedLists
+  (lambda (expr)
+    (list-sort isBigger (getLists2 expr))))
+
 (define getDoubleLists
   (lambda (expr)
-    (sortLst (getLists2 expr))))
+    (sortLst (getOrderedLists expr))))
 
 (define getFirstDoubleSimpleList
   (lambda (expr)
-    (containsDouble? (getLists2 expr))))
+    (containsDouble? (getOrderedLists expr))))
 
 (define swapInList
   (lambda (old new lista)
@@ -160,34 +183,14 @@
          ,pairs
          ,body))))))
 
-(define getLists
-  (lambda (expr)
-    (if (not (list? expr))
-        '()
-    (if (isSimpleList expr)
-        (if (null? expr)
-            '()
-            (if (equal? (car expr) 'quote)
-              '()
-            
-        `(,expr)))
-    
-      `(,expr ,@(getLists (car expr))
-              ,@(getLists (if (= (length (cdr expr)) 1)
-                              (car (cdr expr))
-                              (cdr expr))
-    ))
-  ))))
+
 
 
             
 
 ;(containsDouble? (getLists2 '((+ 1 2) (+ 2 55) (+ 1 2 (+ 2 3) (+ 1 1)) (+ 1 2 (+ 2 3) (+ 1 1)))))
-  
 
-(getLists2      '('(' '(a b) '(a b))   
-      ))
-
+ (cse2 '(begin '(a b) '(a b))  )
 
 ;(load "cse.so")
 ;(cse '(f '('(+ x 1)) (f x) '(+ x 1)))

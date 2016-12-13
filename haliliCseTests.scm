@@ -90,7 +90,7 @@
 			    (cond ((or (equal? staff-res my-res) (verify-equality input))
 				    (display (format "\033[1;32m Success! ☺ \033[0m \n")) #t)
 				    (else 
-				    (display (format "\033[1;31m Failed! ☹\033[0m , \nExpected: ~s, \nActual: ~s \n" staff-res my-res)) #f)))
+				    (display (format "\033[1;31m Failed! ☹\033[0m , \nExpected: ~s, \nActual  : ~s \n" staff-res my-res)) #f)))
 			  (lambda () (display (format "\n\033[1;34mUNABLE TO DETERMINE SUCESS/FAILURE!\nPLEASE CHECK MANUALLY THE INPUT: ~s\033[0m\n" input)) #f))
 			))))
 			
@@ -143,7 +143,7 @@
     '(foo (a) (b) (c) (b) (c) (b) (c) (a))
     '(begin (define goo (a (b b) (b c) (b b) (b c) (b b) (b c))) (a b))
     '(a (f (+ (g) (h)) 1 (g (+ (g) (h)) (+ (g) (h))) 3 (g (+ (g) (h)) (+ (g) (h))) (+ (g) (h))))
-    ;'(f '('(+ x 1)) (f x) (g x) (f (f x)) '(+ x 1))
+    '(f '('(+ x 1)) (f x) (g x) (f (f x)) '(+ x 1))
     ;'(begin '(a b) '(a b))     
     '(+ (+ (+ x 2) 1) (+ (+ x 2) 1) (+ (+ x 2) 1) (+ (+ x 2) 1)) 
     '(let ((a (+ x 1)) (b (+ x 1)))
@@ -162,9 +162,9 @@
     '(* (+ 2 3 4) (+ 2 3 4))
     '(f (g x y) (f (g x y) z))       
     '(+ (* (- x y) (* x x)) (* x x) (foo (- x y)) (goo (* (- x y) (* x x))))
-    ;'(f (g x) (g (g x)) (h (g (g x)) (g x)) ((g x) (g x)))
-    ;'(list (cons 'a 'b) (cons 'a 'b) (list (cons 'a 'b) (cons 'a 'b)) (list (list (cons 'a 'b) (cons 'a 'b))))
-    ;'(list '(a b) (list '(a b) '(c d)) (list '(a b) '(c d)))
+    '(f (g x) (g (g x)) (h (g (g x)) (g x)) ((g x) (g x)))
+    '(list (cons 'a 'b) (cons 'a 'b) (list (cons 'a 'b) (cons 'a 'b)) (list (list (cons 'a 'b) (cons 'a 'b))))
+    '(list '(a b) (list '(a b) '(c d)) (list '(a b) '(c d)))
 ))
 
 (display (format "\033[1mComp171 - CSE Tests\033[0m\n====================\n"))
