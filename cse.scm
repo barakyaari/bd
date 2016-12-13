@@ -1,5 +1,35 @@
 (load "pattern-matcher.scm")
 
+(define isSublistOfItem
+  (lambda (exp toCheck)
+    (if (equal? exp toCheck)
+    #t
+    (if (list? toCheck)
+      (or 
+        (if (list? (car toCheck))
+                   (isSublistOfItem exp (car toCheck))
+                   #f)
+        (if (not (null? (cdr toCheck)))
+            (isSublistOfItem exp (cdr toCheck))
+            #f))
+      #f
+        )))
+  )
+
+(define isSublist
+  (lambda (exp lista)
+    (ormap 
+      (lambda (x)
+        (isSublistOfItem exp x)) lista)))
+
+
+(define getFirstNonSublist
+  (lambda (lista)
+    (if (not (isSublist (car lista)
+                   (cdr lista)))
+    (car lista)
+    (getFirstNonSublist (cdr lista)))))
+
 (define contains
   (lambda (lst item)
     (member item lst)
@@ -54,9 +84,29 @@
         ))
   ))
 
+(define getLists2
+  (lambda (expr)
+    (if (not (list? expr))
+        '()
+        (if (null? expr)
+            '()
+            (if (const? expr)
+                '()
+      `( ,@(if (list? (car expr))
+            (list (car expr))
+              '())
+             ,@(getLists2 (car expr))
+              ,@(getLists2 (cdr expr))
+    )))
+  )))
+
+(define getDoubleLists
+  (lambda (expr)
+    (sortLst (getLists2 expr))))
+
 (define getFirstDoubleSimpleList
   (lambda (expr)
-    (containsDouble? (getSimpleLists expr))))
+    (containsDouble? (getLists2 expr))))
 
 (define swapInList
   (lambda (old new lista)
@@ -85,7 +135,7 @@
         (body (cdr pairOfPairListAndExpression))
         )
     (if (hasDoubleSimpleList body)
-        (let* ((generated (string->symbol (symbol->string (gensym))))
+        (let* ((generated (gensym))
               (toSwap (getFirstDoubleSimpleList body))
               (pair (list generated (car (list toSwap))))
               )
@@ -109,5 +159,37 @@
       `(let*
          ,pairs
          ,body))))))
+
+(define getLists
+  (lambda (expr)
+    (if (not (list? expr))
+        '()
+    (if (isSimpleList expr)
+        (if (null? expr)
+            '()
+            (if (equal? (car expr) 'quote)
+              '()
+            
+        `(,expr)))
+    
+      `(,expr ,@(getLists (car expr))
+              ,@(getLists (if (= (length (cdr expr)) 1)
+                              (car (cdr expr))
+                              (cdr expr))
+    ))
+  ))))
+
+
+            
+
+;(containsDouble? (getLists2 '((+ 1 2) (+ 2 55) (+ 1 2 (+ 2 3) (+ 1 1)) (+ 1 2 (+ 2 3) (+ 1 1)))))
+  
+
+(getLists2      '('(' '(a b) '(a b))   
+      ))
+
+
+;(load "cse.so")
+;(cse '(f '('(+ x 1)) (f x) '(+ x 1)))
 
 
