@@ -1,3 +1,11 @@
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;; Comp171 - ASS2 - Part 1 - Tests
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 ; Change to your own location
 (load "compiler.scm")
 (load "tagparser.so")
@@ -11,29 +19,24 @@
      (try-thunk))))
 
 (define testVSstaff
-	(lambda (input)
-		(let* ((my-res (try-catch (lambda () (my-parse-func input)) (lambda () (format "ERROR"))))
-		      (staff-res (try-catch (lambda () (staff-parse-func input)) (lambda () (format "ERROR")))))
-			(display input)
-			(display ": ")			
-			(cond ((equal? my-res staff-res)
-				(display "\033[1;32mSuccess! ☺ \033[0m ") (newline) #t)
-				(else (display "\033[1;31mFailed! ☹\033[0m ") 
-					(display ", \nexpected: ")					
-					(display staff-res)
-					(display ", \nactual:   ")
-					(display my-res)
-					(newline)
-					#f))
-			)))
-			
+  (lambda (input)
+    (let* ((my-res (try-catch (lambda () (my-parse-func input)) (lambda () "ERROR")))
+          (staff-res (try-catch (lambda () (staff-parse-func input)) (lambda () (display "\033[1;34m !!Negative Test!! \033[0m ") "ERROR"))))
+      (display (format "~s:" input))
+      ;(display my-res)
+      (cond ((equal? my-res staff-res)
+        (display (format "\033[1;32m Success! ☺ \033[0m \n")) #t)
+        (else 
+        (display (format "\033[1;31m Failed! ☹\033[0m , Expected: ~s, Actual: ~s \n" staff-res my-res)) #f))
+      )))
+      
 (define runTests
   (lambda (tests-name lst)
   (newline)
   (display tests-name)
   (display ":")
   (newline)
-  (display "=============")
+  (display "==============================================")
   (newline)
   (let ((results (map testVSstaff lst)))
   (newline)
@@ -277,24 +280,103 @@
   (list
     '(if)
     '(cond)  
-    '(lambda (a b c d) (f x))
-
     '(lambda (a b c a) (f x))
     '(let ((AbC 5) (Sym123 "abc") (AbC 12)) (if (= AbC 12) #t (begin (display "WOW") #f)))
     '(letrec ((AbC (lambda (x) (AbC x))) (Sym123 "abc") (AbC 12)) (if (= AbC 12) #t (begin (display "WOW") #f)))
 ))
 
-(define myTests
+(define LidanHifiAndKenSaggyTests
   (list
-    '(begin (begin a b) c)
-    '(begin (begin a (begin b (begin d e f g))) h (i j k))
-    '(begin (begin a b c) (begin d e f) (begin e f) g)
+    #f
+    #\a
+    34
+    "abc"
+    '(quote a)
+    '(quote (a b c))
+    '(quote (quote a b c))
+    'abc
+    '123x
+    '(if a b c)
+    '(if (if a b c) 'x '(x y z))
+    '(if a b)
+    '(if a 4)
+    '(if #t 'abc)
+    '(lambda (x y z) (if x y z))
+    '(lambda () a)
+    '(lambda () 'ok)
+    '(lambda (a b c) b1 b2 b3)
+    '(lambda (x y z . rest) (if x y z))
+    '(lambda (x . rest) rest)
+    '(lambda (a b . c) b1 b2 b3)
+    '(lambda args (if x y z))
+    '(lambda args args)
+    '(lambda v b1 b2 b3)
+    '(lambda (x . rest) rest)
+    '(define x 5)
+    '(define x (lambda (x) x))
+    '(define (id x) x)
+    '(define (foo x y z) (if x y z))
+    '(define (foo x y . z) (if x y z))
+    '(define (list . args) args)
+    '(a)
+    '(a b c)
+    '((a b) (a c))
+    '(begin)
+    '(begin e1 e2 e3 e4)
+    '(begin (quote a) abc (quote b))
+    '(lambda (x) (quote a) x (quote b))
+    '(lambda a a a)
+    '(lambda (a . b) a b)
+    '(lambda (a b) a b)
+    '(let ((v1 e1) (v2 e2)) b1 b2 b3)
+    '(let ((v1 e1)) (* v1 2))
+    '(let ((x 3) (y 4) (z 5)) (+ x y) #t #f)
+    '(let ((a 1)) 5 a)
+    '(let () 5)
+    '(let ((a 1) (b 2)) (+ a b))
+    '(letrec ((f1 (lambda (x) (+ 1 x))) (f2 (lambda (y) (* 1 y)))) 1)
+    '(let* ((v1 e1) (v2 (+ v1 1))) b1 b2 b3)
+    '(let* ((v1 e1) (v2 e2)) b1 b2 b3)
+    '(let* ((a 1) (a 2)) a)
+    '(let* ((a 1)) a b)
+    '(let* ((a 1) (b 2)) a)
+    '(let* () a b)
+    '(and)
+    '(and a)
+    '(and a b)
+    '(and a b c)
+    '(and e1 e2 e3 e4)
+    `(and a b c d e f)
+    '(and 1 (if #f #f) 4)
+    '(cond (else x))
+    '(cond (else 3))
+    '(cond (1 2 3) (else 4))
+    '(cond (#f 2))
+    '(cond (#f 2) (else 3))
+    '(cond (x y))
+    '(cond (x y) (else z))
+    '(cond (a b) (c d))
+    '(cond (a b) (c d) (else e))
+    '(cond ((p1? x) e1 e2 e3) ((p2? y) e4 e5) ((p3? z) e6 e7 e8 e9) (else e10))
+    '(cond ((zero? n) 1))
+    '(cond ((zero? n) 1) ((positive? n) 2))
+    '(cond ((zero? n) 1) (else 5))
+    '(cond ((zero? n) 1) ((positive? n) 2) (else 5))
+    '(cond (1 2 3) (else 4))
+    '(define (fact n) (if (zero? n) 1 (* n (fact (- n 1)))))
+    '(quasiquote (a b c))
+    '(quasiquote (a ,b c))
+    '(quasiquote (a ,b c))
+    '(quasiquote (a ,b ,@c))
+    '(quasiquote (,@a ,b c))
+    
+    
+))
 
-    ))
+(display (format "\033[1mComp171 - Part 1 Tests\033[0m\n================================\n"))
 
 (runAllTests
   (list
-      (cons "MyTests" myTests)     
       (cons "Lambda" lambdaTests)     
       (cons "Or" orTests)   
       (cons "And" andTests) 
@@ -310,4 +392,5 @@
       (cons "QuasiQuote" quasiquoteTests) 
       (cons "Parser" parserTests)
       (cons "Negative" negativeTests)
+      (cons "Comp151 - Lidan Hifi and Ken Saggy tests" LidanHifiAndKenSaggyTests)
 ))
