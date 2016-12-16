@@ -54,27 +54,24 @@
     (member item lst)
       ))
 
-(define containsDouble?
+(define containsDouble
   (lambda (lista)
     (if (null? lista)
       `()
         (if (not (list? (car lista)))
-              (containsDouble? (cdr lista))
+              (containsDouble (cdr lista))
       (if (contains (cdr lista) (car lista))
             (car lista)
-         (containsDouble? (cdr lista)))))))
+         (containsDouble (cdr lista)))))))
 
 (define const?
   (lambda (x)
-   
-    (if (list? x)
-        (if (> (length x) 1)
-            (if (equal? (car x) 'quote)
-              #t
-              #f)
-            #f)
-          #t)
-    ))
+    (cond ((not (list? x)) #f)
+          ((null? x) #f)
+          ((equal? (car x) 'quote) #f)
+          (else #t)
+          )
+   ))
 
 (define isSimpleList
   (lambda (expr)
@@ -86,7 +83,7 @@
               expr)
   )))
 
-(define getSimpleLists
+(define getSimpleListsOld
   (lambda (expr)
     (if (not (list? expr))
         '()
@@ -98,12 +95,12 @@
             
         `(,expr)))
         
-        `( ,@(getSimpleLists (car expr))
-              ,@(getSimpleLists (cdr expr)))
+        `( ,@(getSimpleListsOld (car expr))
+              ,@(getSimpleListsOld (cdr expr)))
         ))
   ))
 
-(define getLists2
+(define getAllListsInExpression
   (lambda (expr)
     (if (not (list? expr))
         '()
@@ -114,22 +111,18 @@
       `( ,@(if (list? (car expr))
             (list (car expr))
               '())
-             ,@(getLists2 (car expr))
-              ,@(getLists2 (cdr expr))
+             ,@(getAllListsInExpression (car expr))
+              ,@(getAllListsInExpression (cdr expr))
     )))
   )))
 
 (define getOrderedLists
   (lambda (expr)
-    (list-sort isBigger (getLists2 expr))))
+    (list-sort isBigger (getAllListsInExpression expr))))
 
-(define getDoubleLists
+(define getFirstDoubleList
   (lambda (expr)
-    (sortLst (getOrderedLists expr))))
-
-(define getFirstDoubleSimpleList
-  (lambda (expr)
-    (containsDouble? (getOrderedLists expr))))
+    (containsDouble (getOrderedLists expr))))
 
 (define swapInList
   (lambda (old new lista)
@@ -145,9 +138,9 @@
         (cons (swapInList old new (car lista))
               (swapInList old new (cdr lista)))))))))
 
-(define hasDoubleSimpleList
+(define hasDoubleList
   (lambda (expr)
-    (if (= (length (getFirstDoubleSimpleList expr)) 0)
+    (if (= (length (getFirstDoubleList expr)) 0)
     #f
     #t)))
 
@@ -157,9 +150,9 @@
   (let ((pairs (car pairOfPairListAndExpression))
         (body (cdr pairOfPairListAndExpression))
         )
-    (if (hasDoubleSimpleList body)
+    (if (hasDoubleList body)
         (let* ((generated (gensym))
-              (toSwap (getFirstDoubleSimpleList body))
+              (toSwap (getFirstDoubleList body))
               (pair (list generated (car (list toSwap))))
               )
         (generateListOfPairsAndExpression (cons (append pairs (list pair)) (swapInList toSwap generated body))))
@@ -190,9 +183,11 @@
 
 ;(containsDouble? (getLists2 '((+ 1 2) (+ 2 55) (+ 1 2 (+ 2 3) (+ 1 1)) (+ 1 2 (+ 2 3) (+ 1 1)))))
 
- (cse2 '(begin '(a b) '(a b))  )
+(getAllListsInExpression '(* (+ 1 2) (+ 1 2)))
 
-;(load "cse.so")
-;(cse '(f '('(+ x 1)) (f x) '(+ x 1)))
+;(const? '(a b))
+
+(load "cse.so")
+(cse  '(* (+ 1 2) (+ 1 2)))
 
 
