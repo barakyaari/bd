@@ -1,5 +1,26 @@
 (load "pattern-matcher.scm")
 
+
+(define swapInList
+  (lambda (old new lista)
+    (if 
+      (not (list? lista))
+        lista
+        (if (const? lista)
+            lista
+        (if (equal? lista old)
+             new
+        (if (null? lista)
+            lista
+        (cons (swapInList old new (car lista))
+              (swapInList old new (cdr lista)))))))))
+
+(define filterOut
+  (lambda (toFilter lista)
+    (filter (lambda (x)
+             (equal? x toFilter)) lista)
+            ))
+
   (define flatten
    (lambda (lista)
      (if (not (list? lista))
@@ -15,11 +36,7 @@
                         )
              )))
  
- (define isBigger
-   (lambda (x y)
-     (> (length (flatten x)) (length (flatten y))))) 
-
-(define isSublistOfItem
+ (define isSublistOfItem
   (lambda (exp toCheck)
     (if (equal? exp toCheck)
     #t
@@ -34,6 +51,41 @@
       #f
         )))
   )
+ 
+(define filterOutExpressionFromList
+  (lambda (toFilterOut exp)
+    (swapInList toFilterOut 'bobcat exp)))
+
+(define isAppearingByItselfInFullExpression
+  (lambda (toCheck largerExpression OriginalExpression)
+    (isSublist toCheck (filterOutExpressionFromList largerExpression OriginalExpression))))
+
+(define isSecondAppearingTwiceInFirst
+  (lambda (first second)
+    (let* (
+           (listWithSwappedSecond (swapInList second 'bobcat first))
+           (flattendedFirst (flatten listWithSwappedSecond))
+           (listOfSwapped (filterOut 'bobcat flattendedFirst))        
+             )
+      (> (length listOfSwapped) 1))))
+
+ (define isSecondBiggerThanFirst
+   (lambda (originalExpression)
+   (lambda (first second)
+     (let ((firstIsByItself (isAppearingByItselfInFullExpression first second originalExpression))
+           (firstIsSublistOfSecond (isSublistOfItem first second))
+           (isSecondAppearingTwice (isSecondAppearingTwiceInFirst first second))
+           (isFirstAppearingTwice (isSecondAppearingTwiceInFirst second first))
+           )
+       (if isSecondAppearingTwice
+           #t
+       (if isFirstAppearingTwice
+          #t
+     (if firstIsByItself
+      #t
+      (if (isSublistOfItem first second)
+        #f
+      (> (length (flatten first)) (length (flatten second)))))))))))
 
 (define isSublist
   (lambda (exp lista)
@@ -66,10 +118,10 @@
 
 (define const?
   (lambda (x)
-    (cond ((not (list? x)) #f)
-          ((null? x) #f)
-          ((equal? (car x) 'quote) #f)
-          (else #t)
+    (cond ((not (list? x)) #t)
+          ((null? x) #t)
+          ((equal? (car x) 'quote) #t)
+          (else #f)
           )
    ))
 
@@ -108,7 +160,7 @@
             '()
             (if (const? expr)
                 '()
-      `( ,@(if (list? (car expr))
+      `( ,@(if (not (const? (car expr)))
             (list (car expr))
               '())
              ,@(getAllListsInExpression (car expr))
@@ -117,51 +169,42 @@
   )))
 
 (define getOrderedLists
-  (lambda (expr)
-    (list-sort isBigger (getAllListsInExpression expr))))
+  (lambda (expr originalExpression)
+    (display (list-sort (isSecondBiggerThanFirst originalExpression) (getAllListsInExpression expr)))
+    (newline)
+        (newline)
+
+    (list-sort (isSecondBiggerThanFirst originalExpression) (getAllListsInExpression expr))))
 
 (define getFirstDoubleList
-  (lambda (expr)
-    (containsDouble (getOrderedLists expr))))
+  (lambda (expr originalExpression)
+    (containsDouble (getOrderedLists expr originalExpression))))
 
-(define swapInList
-  (lambda (old new lista)
-    (if 
-      (not (list? lista))
-        lista
-        (if (const? lista)
-            lista
-        (if (equal? lista old)
-             new
-        (if (null? lista)
-            lista
-        (cons (swapInList old new (car lista))
-              (swapInList old new (cdr lista)))))))))
 
 (define hasDoubleList
-  (lambda (expr)
-    (if (= (length (getFirstDoubleList expr)) 0)
+  (lambda (expr originalExpression)
+    (if (= (length (getFirstDoubleList expr originalExpression)) 0)
     #f
     #t)))
 
 (define generateListOfPairsAndExpression
-  (lambda (pairOfPairListAndExpression)
+  (lambda (pairOfPairListAndExpression originalExpression)
     
   (let ((pairs (car pairOfPairListAndExpression))
         (body (cdr pairOfPairListAndExpression))
         )
-    (if (hasDoubleList body)
+    (if (hasDoubleList body originalExpression)
         (let* ((generated (gensym))
-              (toSwap (getFirstDoubleList body))
+              (toSwap (getFirstDoubleList body originalExpression))
               (pair (list generated (car (list toSwap))))
               )
-        (generateListOfPairsAndExpression (cons (append pairs (list pair)) (swapInList toSwap generated body))))
+        (generateListOfPairsAndExpression (cons (append pairs (list pair)) (swapInList toSwap generated body)) originalExpression))
     (cons pairs body)))))
 
 (define cse2
   (lambda (exp)
     (let* (
-           (pair (generateListOfPairsAndExpression (cons '() exp)))
+           (pair (generateListOfPairsAndExpression (cons '() exp) exp))
            (body (cdr pair))
            (pairs  (car pair)))
       (if (null? pairs)
@@ -176,18 +219,11 @@
          ,pairs
          ,body))))))
 
+(define toTest '(* (+ (+ 1 (+ 2 (- 3 (+ 4 5))))) (+ (+ 1 (+ 2 (- 3 (+ 4 5))))) (+ (+ 11 (+ 22 (- 45 (+ 4 5))))) (+ (+ 113 (+ 220 (- 3 (+ 4 5)))))))
+(getOrderedLists toTest toTest)
 
+(cse2 toTest)
 
 
             
-
-;(containsDouble? (getLists2 '((+ 1 2) (+ 2 55) (+ 1 2 (+ 2 3) (+ 1 1)) (+ 1 2 (+ 2 3) (+ 1 1)))))
-
-(getAllListsInExpression '(* (+ 1 2) (+ 1 2)))
-
-;(const? '(a b))
-
-(load "cse.so")
-(cse  '(* (+ 1 2) (+ 1 2)))
-
-
+  
